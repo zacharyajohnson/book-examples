@@ -1,0 +1,403 @@
+05/5/2023
+
+"Booting" - starting up a computer
+"Bootstrapping" - the computer has to "pull itself up by its own bootstraps"
+Boot Process Tasks:
+        finding, loading, and running bootstrapping code
+        finding, loading, and running OS kernel
+        running startup scripts and system daemons
+        maintaining process hygiene and managing system state transitions
+2.1: Boot Process Overview
+        during bootstrapping, kernel is loaded into memory and begins to execute
+        Table: Linux and Unix boot process
+                image/linux-and-unix-boot-process.jpg
+        no direct control over boot steps
+        can modify bootstrap configs by:
+                editing config files for system startup scripts
+                change arguments bootloader passes to kernel
+        init/systemd
+                init
+                        series of shell scripts
+                systemd
+                        unit files
+                handle filesystem mounting and starting of system daemons
+2.2: System Firmware
+        when a machine is powered on, the cpu is hardwirred to execute boot code stored
+        in ROM(Read Only Memory)
+
+        Firmware
+                knows about all devices on motherboard
+                        SATA controllers
+                        network interfaces
+                        USB controllers
+                        sensors for power/temperature
+                allows disabling of hardware and hiding from OS
+                has UI that can be accessed during startup
+                        should tell what key to press during startup
+       Bootstraping
+                probes for hardware on disks
+                run health checks
+                looks for next stage of of bootstrapping code(boot device)
+                        boot device can be set in UI and in what order it is checked
+       BIOS vs UEFI
+                BIOS
+                        Basic Input/Output System
+                        legacy firmware
+                UEFI
+                        Unified Extensible Firmware Interface
+                        modern standard
+                        current revision of EFI standard
+                        universal support in hardware
+                both are still used
+        Legacy BIOS
+                boot device starts with the MBR(Master Boot Record)
+                MBR
+                        first stage bootloader("Boot Block")
+                        < 512 bytes
+                        load/run second stage bootloader
+                        primitive disk partioning table
+                boot block/ BIOS do not understand standard filesystems
+                hence the second stage bootloader must be kept somewhere easily accesible
+                
+                Second Stage Bootloader
+                        can be found at beginning of active disk partition
+                                boot block reads partition table and findds the disk partition markes as active
+                                reads and executes second stage bootloader from beginning or partition
+                                called volume boot record
+                        can be found in "dead zone"
+                                refers to space between MBR and first disk partition
+                                first partition doesn't start until 64th disk block
+                                used by GRUB bootloader
+                        knows about OS's and filesystems
+05/19/2023
+        UEFI
+                GPT(GUID Partioning Table)
+                GUID - Globally Unique Identifer
+                understands FAT filesystems
+                        FAT - File Allocation Table
+                EFI System Partition(ESP)
+                        FAT Filesystem, can be maintained by any OS
+                        maintains MBR record at the beginning of each disk
+                        located by firmware by consulting GPT partition table
+                        BIOS is not compatible with UEFI/GPT
+                        reads target application from a file on the filesystem
+                        bootloader is optional, can load kernel that has been configured for direct UEFI loading
+                        /efi/boot/bootx64.efi
+                                default bootloader target path in ESP
+                        /efi/ubuntu/grubx64.efi
+                                configured path for GRUB bootloader
+                        has standardized APIs
+                                OS can use them or take direct control of hardware
+                                can change/modify UEFI variables on a running system
+                efibootmgr
+                        view UEFI variables with -v flag
+                        can change boot order and selct boot options
+
+                        are read/writeable on the system so be careful to
+                        not delete or you can brick your system
+2.3: Boot Loaders
+        identifies and loads an OS kernel
+        provides boot time UI which lets you select which OS to load if there are multiple on system
+        passes any config arguments to the kernel
+                can be set to be passed in each boot or selected from the UI for the current boot cycle
+        GRUB
+                most used linux bootloader
+        Unix BSD OS's have their own bootloaders
+2.4: GRUB: The Grand Unified Boot Loader
+        developed by the GNU project
+        two versions
+                GRUB Legacy(original)
+                GRUB 2
+                book covers GRUB 2 only
+        Grub Configuration
+                lets you specify parameters for the kernel/ which OS to boot
+                understands most filesystems
+                        can store configs on the root filesystem
+                configs stored in text file
+                        grub.cfg
+                        stored at /boot/grub or /boot/grub2
+                generate grub.cfg with:
+                        grub2-mkconfig(Red Hat)
+                        update-grub(Debian/Ubunutu)
+                grub.cfg will be periodically regenerated after updates
+                any changes made directly to the config will be lost. USE THE GENERATE COMAMND
+
+                config for generate command
+                        stored at /etc/default/grub
+                        variables/values are specified as shell variables
+                        variables
+                                GRUB_BACKGROUND - background image
+                                GRUB_CMDLINE_LINUX - kernel params to add to menu entries for Linux
+                                GRUB_DEFAULT - number or title of default menu entry
+                                GRUB_DISABLE_RECOVERY - prevents generation of recovery mode entries
+                                GRUB_PRELOAD_MODULES - list of GRUB modules to be loaded as early as possible
+                                GRUM_TIMEOUT - seconds to display the boot menu before autoboot
+                        after editing the variables, run the gen command and will translate 
+                        selections into grub.cfg file
+        The GRUB Command Line
+                can be used to edit config files at boot time
+                press c at the GRUB menu  to access
+                can
+                        boot OS's that aren't in grub.cfg
+                        display system info
+                        preform rudimentary filesystem testing
+                anyhing in grub.cfg can be done through cmd line
+                once in cmd lilne, press tab to see all commands
+                commands
+                        boot - boots system from specified kernel image
+                        help - get help for a command
+                        linux - load linux kernel
+                        reboot - reboots the system
+        Linux Kernel Options
+                startup options
+                        modify kernel parameters
+                        instruct kernel to probe for particular devices
+                        specify the path to the init or systemd process
+                        options
+                                debug - turns of kernel debugging
+                                init=/bin/bash - starts only bash shell, useful for recovery
+                                root=/dev/foo - tells the kernel to use /dev/foo as the root device
+                                single - boots to single user mode
+                        boot changes won't be saved, edit files located at
+                                /etc/grub.d/40_custom or /etc/default/grub to persist changes
+                        new kernels don't replace old ones in GRUB. if a kernel update breaks a system,
+                        boot using gthe old version
+5/20/23
+2.6: System Management Daemons
+        after kernel initialization, it starts up a set of processes automatically
+                part of kernel implementation
+                not configurable and don't need administration
+                in ps listings, have low PID and brackets around their names
+                        ex: [kdump], [pagedaemon]
+        most processes aren't setup automatically, rathery they are created at the rquest of existing processes
+        system management daemon
+                called init
+                process id 1
+                multiple implementations, not part of kernel
+                user-level program
+        Responsibilites of Init
+                make sure the system runs the right services and daemons at any given time
+                tracks the mode in which a system should operate
+                        single user mode
+                        multi user mode
+                        server mode
+                                similar to multiuser but no GUI
+                        starts/stops services based on the mode running
+                runs a set of scripts/command that
+                        sets the name of the computer
+                        sets the timezone
+                        checks disks with fsck
+                        mounts filesystems
+                        removes old files from /tmp directory
+                        configures network interfaces
+                        configures packet filters
+                        sets up other daemons and network services
+                init has no knowledge about these task. its only responsible for 
+                running the scripts that do their tasks
+        Implementations of Init
+                SysV init
+                        based on AT&T System V Unix
+                        most common init system on linux before systemd
+                BSD init
+                        derived from BSD Linux
+                        used on BSD systems
+                                FreeBSD
+                                OpenBSD
+                                NetBSD
+                        simpilar compared to SysV init
+                systemd
+                        newest init system
+                        most popular linux distros have switched over to it
+                        does a lot more compared to the other init systems
+        Traditional init(SysV init)
+                run levels
+                        also known as system modes
+                                single user, multi user, etc
+                        denoted by a single letter or digit
+                3 layers of scripts
+                        1st layer
+                                init config that never changes
+                                points to the second layer
+                        2nd layer
+                                changes run levels
+                                lets admins make config changes
+                                points to 3rd layer
+                        3rd layer
+                                runs level specific directories that indicate what services run at what level
+                has no knowledge of dependencies among services, must be run in sequential order
+2.7: Systemd in Detail
+        aims to standardize the control and configuration of system services
+        does more compared to other init systems as a result
+        a collection of programs, daemons, libaries, technologies and kernel components
+        heavily  depends on Linux kernel, Linux only
+
+        Units and Unit Files
+                        Unit
+                                an entity managed by systemd
+                                can be
+                                        service
+                                        socket
+                                        device
+                                        mount point
+                                        automount point
+                                        swap file or partition
+                                        startup target
+                                        a watched file system path
+                                        resource management slice
+                                        a group of externally created processes
+                                behavior is defined and configured by a unit file
+                                can live at
+                                        /usr/lib/systemd/system
+                                        /lib/systemd/system
+                                        /etc/systemd/system
+                                                local unit files and custimizations
+                                                have highest priority
+                                suffix is the type of unit being configured
+        Systemctl: manage systemd
+                sytemctl
+                        used to show status of systemd and make config changes
+                        first argument is typically a subcommand
+                                arguments after the first are for the subcommand
+                        defaults to list-units subcommand if there are no arguments
+                systemctl list-units
+                        shows all laodoed and active serviecs, sockets, targets, mounts, and devices
+                        can filter by type by using the --type flag
+                                ex: --type=service
+                systemctl list-unit-files
+                        list all unit files, even if they are not active
+                        takes --type flag too
+                commonly used systemctl subcommands
+                        list-unit-files {pattern}
+                                show installed units; optinally matching pattern
+                        enable {unit}
+                                enable unit to activate at boot
+                        disable {unit}
+                                prevents unit from activating at boot
+                        isolate {target}
+                                changes operating mode to target
+                        start {unit}
+                                activates unit immediatly
+                        stop {unit}
+                                activates unit immediatly
+                        restart {unit}
+                                restarts(or starts if not running) immediatly
+                        status {unit}
+                                shows units status and recent log entries
+                        kill {pattern}
+                                sends a signal to units matching pattern
+                        reboot
+                                reboots the computer
+                        daemon-reload
+                                reloads unit files and systemd configuration
+        Unit Statuses
+                bad - some kind of problem within systemd; usually a bad unit file
+                disabled - present but not configured to start autonomously
+                enabled - installed and runnable; will start autonomously
+                indirect - disabled, but has peers in also cflauses that may be enabled
+                linked - unit files avaliable through a symlink
+                masked - banished from the systemd world from a logical perspective
+                static - depended on by another unit; has no install requirements
+
+                enabled/disabled
+                        only applies to unit files that have an [Install] section
+                        disabled files can stilll be activated manually
+                static
+                        only active if started manually or are depended on by another unit
+                masked
+                        "administrativly blocked"
+                        systemd is forbidden from activating masked units
+                use systemctl disable for enabled/linked units
+                use systemctl mask for static units
+        Targets
+                analogous to init's run levels
+                used for dependency management for certain targets/run levels
+                systemctl isolate
+                        changes systems operating mode/target
+                        ex: sudo systemctl isolate multi-user.target
+                        init equivalent command is telinit
+                mapping between init run levels and systemd targets
+                        run level 0
+                                target = poweroff.target, description = system halt
+                        run level emergancy
+                                 target = emergency.target, description = bare-=bones shell for system recovery
+                        run level 1,s,single
+                                target = rescue.target, description = single-user mode
+                        run level 2
+                                target = multi-user.target, description = multi-user mode(command line)
+                        run level 3
+                                target = multi-user.target, description = multi-user mode with networking
+                        run level 4
+                                target = multi-user.target, description = not normally used by init
+                        run level 5
+                                target = graphical.target, description = multi-user mode with networking and GUI
+                        run level 6
+                                target = reboot.target, description = system reboot
+                systemctl get-default
+                        gets target the system boots into by default
+                systemctl set-default
+                        changes default target for system
+                systemctl list-units --type=target
+                        list all avaliable targets on the system
+05/24/23
+        Systemd logging
+                universal logging framework
+                        includes kernel and service messages
+                        called the journal
+                        managed by journald daemon
+                logs are store in /run
+                can be accessed by journalctl cmd
+                journalctl
+                        displays all logs(oldest first)
+                edit /etc/systemd/journald.conf to retain messages from prior boots
+                        Add
+                                [Journal]
+                                storage=persistent
+                journalctl --list-boots
+                        list prior boots
+                journalctl -b {index or long-form ID}
+                        gets logs from a specific boot
+                journalctl -u {unit}
+                        restricts logs to a specific unit
+2.8 FreeBSD Init and Startup Scripts
+        BSD style init
+        does not have run levels
+                runs /etc/rc directly
+        /etc/rc
+                wrapper that runs other startup scripts
+                        /usr/local/etc/rc.d
+                        /etc/rc.d
+                first runs the following files
+                        /etc/defaults/config
+                        /etc/rc.conf
+                        /etc/rc.conf.local
+                                shell scripts
+                                contain shell variable definitions
+                calculates run order of scripts in /etc/rc.d based on the rcorder command
+                rcorder
+                        reads rc scripts and looks for dependency info to determine run order
+                service
+                        command used to stop services
+2.9: Reboot and Shutdown Procedures
+        always reboot after changing/adding start up scripts or configurations
+        Shutting Down Physical Systems
+                halt
+                        performs tasks needed for shutdown
+                        does the following in order
+                                logs shutdown
+                                kills nonessential processes
+                                flushes cached filesystem blocks to disk
+                                halts kernel
+                reboot
+                        similar to halt
+                        reboots machine instead
+                shutdown
+                        abstracted over halt and reboot
+                        provides scheduled shutdowns and warnings to logged in users
+                        used when time sharing systems were relevant
+                                now obselete
+                                does the same as halt and reboot
+2.10: Stratagems for a nonbooting System
+        Three approaches in order of desirability
+                don't debug; just restore the system to a known good state
+                bring the system up just enough to run a shell, and debug interactivly
+                boto a seperate system image, mount the sick system's filesystems and investigate from there
