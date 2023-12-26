@@ -7,6 +7,7 @@
         Scripting:
                 Bash or sh
                         Bash is used on most Linux distros
+
                         Try and be POSIX compliant(sh)
                 Python
                 Ruby
@@ -30,8 +31,11 @@
 1.7: Man Pages and Other Online Docs
         Manual Pages
                 "man" pages
-                read with man command
-                docs found on machine
+
+                Read with man command
+
+                Docs found on machine
+
                 Contains docs for:
                         commands
                         drivers
@@ -39,6 +43,7 @@
                         library routines
         Organization of Man Pages
                 Divided into sections
+
                 Sections:
                         1 - user-level commands/app locations
                         2 - system calls and kernal error codes
@@ -50,34 +55,42 @@
                         8 - system administration commands
                         9 - obscure kernal specs and interfaces
         man {title}
-                finds a man page based on title
-                title is a command,device,filename,etc
-                can be sent through commands such as more or less. Defined by PAGER env variable
+                Finds a man page based on title
+
+                Title is a command,device,filename,etc
+
+                Can be sent through commands such as more or less. Defined by PAGER env variable
         man {section} {title}
-                gets man page from a section
+                Gets man page from a section
+
                 Ex:
                         man sync(user command)
                         man 2 sync(sys call)
         man -k {keyword}/apropos {keyword}
-                prints a list of man pages that have keyword in
+                Prints a list of man pages that have keyword in
                 their one line synopses
         makewhatis(Red Hat/FreeBSD) AND mandb(ubuntu)
                 update keywords database
         Storage of Man Pages
                 /usr/share/man
-                        stored source code of man pages
-                        uses nroff text formatter for terms
-                        compressed with gzip
-                                man can uncompress automatically
+                        Stored source code of man pages
+
+                        Uses nroff text formatter for terms
+
+                        Compressed with gzip
+                                Man can uncompress automatically
                 /var/cache/man OR /usr/share/man
-                        cache of preformatted pagesw
+                        Cache of preformatted pagesw
+
                         catman
-                                processes man pages
-                                performats them
-                        much faster to read/process then then sources
+                                Processes man pages
+                                Performats them
+
+                        Much faster to read/process then then sources
                 manpath
-                        search path where man will look for man pages
-                        path can be set by the MANPATH env variable
+                        Search path where man will look for man pages
+
+                        Path can be set by the MANPATH env variable
 1.8: Other Authoritative Documentation
         System Specific Guides
                 vendors/distros have their own docs
@@ -86,73 +99,77 @@
                         RHEL: www.redhat.com/docs
                         FreeBSD: www.freebsd.org/docs.html
         Supplemental Documents
-                white papers
-                design rationals
-                books
-                developer mailing lists 
-                developer IRC channels
+                White papers
+                Design rationals
+                Books
+                Developer mailing lists 
+                Developer IRC channels
         Books
                 O'Reilly
-                        started covering Unix topics
-                        has books on every important Unix/Linux system and command
+                        Started covering Unix topics
+
+                        Has books on every important Unix/Linux system and command
         RFC Publications
                 Request for Comments
-                describe protocols and procedures used on the Internet
-                authoritative
-                "reference implementation"
-                        implemented by a trusted source according to the RFC spec
+
+                Describe protocols and procedures used on the Internet
+
+                Authoritative
+
+                "Reference Implementation"
+                        Implemented by a trusted source according to the RFC spec
 1.9: Other Sources of Information
         darkreading.com
-                security news,trends, and discussions
+                Security news,trends, and discussions
         linux.com
-                a linux foundation site, forumn
+                A linux foundation site, forumn
                 good for new users
         linuxfoundation.org
-                nonprofit fostering OSS
+                Nonprofit fostering OSS
                 employer of Linus Torvalds
         lwn.net
-                high quality, timely articles on Linux and OSS
+                High quality, timely articles on Linux and OSS
         lxer.com
                 Linux news aggregator
         Schneier.com
-                blog of Bruce Schneier, privacy and security expert
+                Blog of Bruce Schneier, privacy and security expert
         securityfocus.com
-                vulnerability reports and security related mailing lists
+                Vulnerability reports and security related mailing lists
         everythingsysadmin.com
-                blog of Thomas Limoncell, respected sysadmin
+                Blog of Thomas Limoncell, respected sysadmin
         sysadvent.blogspot.com
-                advent for sysadmins with articles each December
+                Advent for sysadmins with articles each December
         oreilly.com/topics
-                learning resources from O'reilly on many topics
+                Learning resources from O'reilly on many topics
         Task Specific Forums and Reference Sites
                 wiki.archlinux.org
-                        articles and guides for Arch Linux; many are more general
+                        Articles and guides for Arch Linux; many are more general
                 askubuntu.com
                         Q&A for Ubuntu users and developers
                 digitalocean.com/community/tutorials
-                        tutorials on many OSS, development, and sysadmin topics
+                        Tutorials on many OSS, development, and sysadmin topics
                 kernal.org
-                        offical linux kernal site
+                        Offical linux kernal site
                 serverfault.com
-                        collaboratively edited database of sysadmin questions
+                        Collaboratively edited database of sysadmin questions
                 serversforhackerrs.com
-                        high quality videos, forums, and articles for administration
+                        High quality videos, forums, and articles for administration
         Conferences Relevant to Sysadmins
                 LISA
-                        location varies, Q4
+                        Location varies, Q4
                         Large Installation System Administration
                 Monitorama
                         Portland, June
-                        monitoring tools and techniques
+                        Monitoring tools and techniques
                 OSCON
-                        varies(US/UK), Q2/Q3
-                        long running O'Reilly OSS conference
+                        Varies(US/UK), Q2/Q3
+                        Long running O'Reilly OSS conference
                 SCALE
                         Pasadena, Jan
-                        southern California Linux expo
+                        Southern California Linux expo
                 Defcon
                         Las Vegas, July
-                        oldest and largest hacker convention
+                        Oldest and largest hacker convention
                 Velocity
                         Global, varies
                         O'Reilly conference on web operations
@@ -163,72 +180,87 @@
                         Las Vegas, Q4
                         AWS cloud computing conference
                 VMWord
-                        varies(US/EU), Q3/Q4
-                        virtualization and cloud computing
+                        Varies(US/EU), Q3/Q4
+                        Virtualization and cloud computing
                 LinuxCon
-                        global, varies
-                        the future of Linux
+                        Global, varies
+                        The future of Linux
                 RSA
                         San Francisco, Q1/Q2
-                        enterprise cryptography adn infosec
+                        Enterprise cryptography adn infosec
                 DevOpsDays
-                        global, varies
-                        a range of topics on bridging the gap between development and ops teams
+                        Global, varies
+                        A range of topics on bridging the gap between development and ops teams
                 QCon
-                        global, varies
-                        a conference for software developers
+                        Global, varies
+                        A conference for software developers
 1.10: Ways to Find and Install Software
-        modern OS's devide contents into packages that can be installed independtly of each other
+        Modern OS's devide contents into packages that can be installed independtly of each other
+
         Package Format
                 Ex: yum, apt, pacman
-                compile source code of software and distribute the binary using the in a package repo(OS specific)
-                just because two distros use the same format doesn't mean they can use the same binary
-                        each distro has different conventions that make them different
-                if need be a piece of software can be installed manually from source code
+
+                Compile source code of software and distribute the binary using the in a package repo(OS specific)
+
+                Just because two distros use the same format doesn't mean they can use the same binary
+                        Each distro has different conventions that make them different
+
+                If need be a piece of software can be installed manually from source code
         Determining if Software is Already Installed
                 Which command
                         Finds binary location
-                        searches based on PATH variable
+
+                        Searches based on PATH variable
                 Whereis command
-                        similar to which
-                        searches more directories
-                        independent of PATH variable
-                        can find binary, source, and man page file locations
+                        Similar to which
+
+                        Searches more directories
+
+                        Independent of PATH variable
+
+                        Can find binary, source, and man page file locations
                 locate {pattern}
                         FreeBSD includes this. For Linux needs to be installed
-                        can find any type of file
-                        searches a precompiled index of the filesystem
-                                update the index with updatedb command
+
+                        Can find any type of file
+
+                        Searches a precompiled index of the filesystem
+                                Update the index with updatedb command
         Adding New Software
-                first, find the canonical name of the software package
-                command to add package is based on distro
+                First, find the canonical name of the software package
+
+                Command to add package is based on distro
                         Ex: 
                                 Debian: sudo apt-get install
                                 Red Hat: sudo yum install
                                 FreeBSD: sudo pkg install -y
         Building Software from Source Code
-                find the source code
-                        usually a git repository
-                        a lot can be found on github or gitlab
-                download the source code
-                follow the softwares install/build guide
-                        look for install or readme files
+                Find the source code
+                        Usually a git repository
+
+                        A lot can be found on github or gitlab
+
+                Download the source code
+
+                Follow the softwares install/build guide
+                        Look for install or readme files
         Installing from a Web Script
-                typically driven by a shell script downloaded with curl
+                Typically driven by a shell script downloaded with curl
                         Ex:
                                 curl -o /tmp/saltboot -SL https../
                                 sudo sh /tmp/saltboot
                 Issues
-                        no record of installation
-                                always prefer OS packages
-                        unsecured HTTP
-                                only use HTTPS
-                        partial script execution
+                        No record of installation
+                                Always prefer OS packages
+                        Unsecured HTTP
+                                Only use HTTPS
+                        Partial script execution
                                 Ex:
                                         curl -L https://... | sudo sh
-                                if curl fails due to a network exception, could execute 
+
+                                If curl fails due to a network exception, could execute 
                                 a partial script or mess up OS environment
 
-                                fix is split it into two steps
+                                Fix is split it into two steps
                                         curl -L https://...
                                         sudo file sh
