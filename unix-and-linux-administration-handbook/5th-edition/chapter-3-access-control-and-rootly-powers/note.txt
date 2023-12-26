@@ -1,0 +1,374 @@
+05/24/23
+3.1: Standard UNIX Access Control
+        Default for general-purpose OS distributions
+
+        Rules:
+                Access control decisions depend on which user is attempting
+                to perform an operation or in some cases, on the users membership
+                in a UNIX group
+                
+                Objects(files and processes) have owners. Owners have
+                broad(but not necessairly unrestricted) control over their objects
+        
+                You own the objects you create
+
+                The special user account called "root" can act as the 
+                the owner of any object
+
+                Only can root can perform certain sensitive administrative operations
+
+        Filesystem Access Control
+                Every file has
+                        owner
+                                Can set file permissions
+                                Can restrict access to themselves
+
+                        group
+                                Defined in /etc/group
+                                Can be stored in LDAP
+                                Multiple users are part of groups
+
+                Kernel/filesystem track users/groups as numbers
+                        User identification numbers(UUIDS) are mapped
+                        to usernames in /etc/passwd
+
+                        Group identification numbers(GIDs) are mapped
+                        to group names in /etc/group
+
+                Text names are defined for human convience
+                        Commands must look up id name mapping each time its run
+
+05/25/2023
+        Process Ownership
+                Owner
+                        Can send process signals
+                        Can reduce(degrade) scheduling priority
+
+                Processes have multiple IDs
+                        Real UID/GID
+                                Used for accounting(largely vestigial)
+                        Effective UID/GID
+                                Used for access permissions
+                        Saved UID/GID
+                                Allows a program to invoke them to enter 
+                                a privilaged mode of operation
+                        Filesystem ID
+                                Determines file access permissions
+
+        The Root Account
+                Superuser account
+
+                Username is "root"
+
+                UID 0
+
+                Can perform any valid operation on any file or process
+
+                Restricted operations to root
+                        Creating device files
+                        Setting the system clock
+                        Raising resource usage limits and process priorities
+                        Setting the systems hostname
+                        Configuring network interfaces
+                        Opening privileged network ports( < 1024 )
+                        Shutting down the system
+
+3.2: Management of the Root Account
+        Root Account Login
+                Distros let you login to root by default
+                        Bad idea, as no operation logs are stored
+                        No record of who did the changes
+
+                Good practice is to disable root login
+
+                If root login is needed it must have a strong password
+
+        su: substitute user identity
+                By default, accesses the root account, 
+                prompts for a root password, and starts a root shell
+
+                Root privligaes exist until the terminal is terminated
+
+                Doesn't record executed operations, only who logged in as root
+
+                Can access other accounts
+                        ex: su - {username}
+                                Prompts for user password
+
+                        Dash puts shell in login mode, used for debugging
+
+                Good practice to type full pathname
+                        /bin/su or /usr/bin/su
+
+                        Helps protect against mallicous programs called su
+
+                Must be part of group "wheel" to use command
+
+                Superseeded by sudo command
+
+                Useful for debugging when sudo is broken
+
+                Stands for "substitute user"
+
+        sudo: limited su
+                Recommended way to handle root access
+
+                Takes a command as an argument and runs it as root
+
+                consults /etc/sudoers
+                        Lists people can use sudo and what commands are allowed to run
+
+                If the command and user iis in sudoers, it executes the command
+
+                Prompts the user for password before executing the command
+
+                Repeat sudo commands
+                        Can be run without entering a password 
+                        for 5 minutes(configuarable)
+
+                Keeps a log of
+                        Commands executed and the hosts they were run on
+                        The people who ran the commands
+                        The directories the commands were run from
+                        The times the commands were run
+
+                Stands for "substitute user do"
+                        Can run commands as other users besides root
+                                ex: sudo -u {user}
+
+        visudo
+                Used to edit sudoers file
+
+                Check no one is editing it currently, 
+                opens an editor, and does syntax checking 
+                before saving the file
+
+                Helps prevent broken sudo since invalid syntax 
+                in sudoers will break sudo
+
+                The editor visudo uses can be changed by altering 
+                the EDITOR environment variable
+
+        sudo Pros vs Cons
+                Pros
+                        Accountability via command logging
+
+                        Users can do specific commands with unrestricted root access
+
+                        Root password can only be known by few people
+
+                        Faster than su or logging in as root
+
+                        A list of users with root privelages is maintained
+
+                        A single file can contorl access for an entire network
+
+                Cons
+                        Breaches of personal account can be as bad as 
+                        root if permissions are high
+
+                        Command logging can be suberted by tricks 
+                        such as shell escaping or sudo sh or sudo su 
+
+        Disabling the Root Account
+                If sudo is used in a standard way, 
+                the root password many not be needed
+
+                passwd -l
+                        Locks user account
+
+                passwd -u
+                        Unlocks user account
+
+                Removing the root password means it can't be compromised
+                However, having a root password may be useful when a machine 
+                has issues thatinterferes with sudo working correctly
+
+        System Accounts Other than Root
+                Several pseudo-users are defined in most systems
+                        Low UID's, < 100
+
+                        Associated with specific software
+
+                        Cannot be logged into
+
+                        Shells are set to /bin/false or /bin/nologin
+                                Protects against remote login exploits
+
+                Several pseudo-groups as well
+
+                More safer than root
+                        Allows access to defined groups and resources
+
+3.3: Extensions to the Standard Access Control Model
+        Drawbacks of the Standard Model
+                Root account is a single point of failure. 
+                If compromised the entire system is
+
+                Little to no mention about security on a network
+                
+                Group definition is a privelaged operation. 
+                No way for a user to define what other users ahve access to
+
+                Access control is embedded in program and any 
+                changes to it involve recompiling acode
+
+                Little or no support ofr auditing or logging.
+
+                No way to track use of elevated privlages or 
+                see what operations a group has performed
+05/30/23
+        PAM: Pluggable Authentication Modules
+                User account are typically secured by passwords 
+                stored in /etc/shadow or /etc/master.passwd
+
+                Programs like login, su, or sudo assume we are using passwords
+                However, they shouldn't make assumptions. What if we wanted to
+                use another way of identification such as two factor auth?
+
+                PAM
+                        Wrapper for variety of method specific auth libraries
+
+                        Admins determine the auth methods
+
+                        Programs call PAM and PAM calls the auth library
+
+                        Helps answer "How do I know this is really user x?"
+
+        Kerberos: network Cryptographic Authentication
+                Deals with authentication, not access control
+
+                Specific auth method
+
+                Can be used with PAM
+                        PAM is the wrapper and Kerberos is the
+                        implementation
+
+                Uses a trusted third party(server)
+                to perform authentication for an entire network
+                        Authenticate to the Kerberos service
+                        instead of the local machine
+
+                        Provides cryptographic credentials
+                        to present to other services to verify
+                        identity
+
+                Standard auth system in Windows and is used in
+                Microsofts Active Directory
+
+        Filesystem Access Control Lists(ACL)
+                Generalization of traditional user/group/other permission model
+
+                Allows permissions to be set for multiple users and groups at once
+
+                Part of filesystem implementation, must be supported by filesystem
+                being used
+
+                All major Unix/Linux filesystems support ACLs
+
+        Linux Capabilities
+                Divide powers or root into 30ish seperate permissions
+
+                Can be inherited from a parent, process, or enabled/disabled
+                by attributes on the executable
+                        Processes can renounce capabilities they don't plan to use
+
+                Used by Docker and AppArmor, rarely used on their own
+
+                See man 7 capabilities for more info
+
+        Linux Namespaces
+                Hierarchical partitions used to segregate processes
+
+                Processes can only see a subset of system files, network ports
+                and processes
+
+                Preemptive access control
+
+                Inside a partition, normal access control rules apply
+
+                Irreversable, processes aren't aware they are in a partition
+
+                Foundation of software containerization
+
+3.4: Modern Access Control
+        Linux Security Modules API
+                Kernel level interface
+
+                Allows access control systems to integrate themselves
+                as loadable kernel modules
+
+        LSM systems have no effect unless they are turned on
+
+        Linux ships with the following
+                SELinux
+                AppArmor
+                Smack
+                TOMOYO
+                Yama
+
+        Unix is similar(TrustedBSD)
+                Provides sandboxing technology for macOS/iOS
+
+        When multiple modules are active in Linux, an operation
+        must be approved by all of them to be permitted
+
+        Mandatory Access Control
+                Standard Unix access control is "discretionary access control"
+                        Allows owners of access controlled entities to set
+                        the permissions on them
+
+                        Ex: Allow other users to view your home directory
+
+                Mandatory Access Control(MAC)
+                        Allows overriding or supplemnting of discrentionary access control
+
+                        Follows jprinciple of least privileage
+
+        Role-based Access Control
+                RBAC
+
+                Permissions aren't assigned to users directly
+
+                Permissions are assigned to itermediary roles.
+                Roles are assigned to users
+
+                To make an access control design, the system iterates
+                through the roles of the user to see if they have valid
+                permissions
+
+                Similar to Unix groups, but more general. Can be used outside filesystems
+
+                Roles can be hierarchical
+
+                Linux/FreeBSD have no native RBAC functionality
+                Bild into serveral MAC options
+
+        SELinux: Security Enhanced Linux
+                Implements many flavors of MAC and RBAC
+
+                Very hard to administer and troubleshoot
+
+                Used in government finance, health care, and is apart of Android
+
+                Hard to create new policies
+
+                General policies are available online
+
+        AppArmor
+                Developed by Canonical(Bleh)
+
+                Implements MAC and supplements traditional Unix access control
+
+                Not user facing, meant to minimize damage individual programs
+                can do if compromised
+
+                AppArmor profiles allow the kernel to filter process activites
+                        Profile must name everything the process is allowed to do
+
+                Denies all request by default
+
+                Programs without profiles run as though it wasn't installed
+
+                Profiles stored in /etc/apparmor.d
+
