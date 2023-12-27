@@ -1,0 +1,195 @@
+08/16/23
+
+Log management includes the following tasks
+        Collecting logs form a variety of sources
+
+        Providng a structured interface for querying,
+        analyzing, filtering, and monitoring messages
+
+        Managing the retention and expiration of messages
+        so that info is kept as long as it is potentially
+        useful or legally required, but not indefinitly
+
+Two main logging frameworks:
+        syslog
+        sytemd journal
+
+10.1: Log Locations
+        Like anything in Unix/Linux, log file locations are inconsitent
+        as fuck. Don't bother memorizing it.
+
+        /var/log is your best bet, but some snowflake software can dump
+        logs anywhere
+
+        Logs can fill up quickly so its smart to put /var/log as a seperate
+        disk parition
+
+        Files not to manage
+                wtmp(wtmpx)
+                        Record of user logins/logouts and
+                        system reboot/shutdown times
+
+                        Binary format
+
+                        Use last to decode info
+
+                Some applications create binary transaction logs such as
+                databases. Don't attempt to manage or view them in the terminal
+
+        How to View Logs in the Systemd Journal
+                journalctl
+                        Prints messages from systemd journal
+
+                        -u: View logs for a specific service unit
+                                Ex: journalctl -u ssh
+
+                        -f: Print new messages as they arrive
+                                Ex: journalctl -f
+
+10.2: The Systemd Journal
+        systemd-journald
+                Logging daemon
+                
+                Duplicates most of syslogs fuctionality
+
+                Can run in tandem with syslog
+
+                Stores mesages in binary format
+
+                Can use journalctl to view messages
+
+                Collects and indexes messages from:
+                        /dev/log socket
+                                Harvest messages from software that
+                                submits messages according to syslog conventions
+
+                        /dev/kmsg
+                                Collect messages from Linux kernel. Replces
+                                traditional klogd process
+
+                        Unix socket /run/systemd/journal/stdout
+                                Service sfotware that writes messages to STDOUT
+
+                        Unix Socket /run/systemd/journal/socket
+                                Service software that submit messages through
+                                the systemd journal API
+
+                        Audit messages from kernels auditd daemon
+
+        Configuring the systemd Journal
+                /etc/systemd/journald.conf
+                        Default config file
+
+                        Not edited directly
+                                Any .conf files placed in /etc/systemd/journald.conf.d/
+                                directory is incorparated into the config
+
+                        Includes a commented out version of each option with the
+                        defaults
+
+        Adding More Filtering Options for journalctl
+                To allow users to read from the journal with sudo permissions,
+                add them to the systemd-journal UNIX group
+
+                journalctl --disk-usuage
+                        Show size of journal on disk
+
+                --list-boots
+                        Show sequential list of boots with numerical
+                        identifiers
+
+                -b
+                        Restrict logs to boot session
+
+                        Ex: journalctl -b 0 -u ssh
+
+                --since / --until
+                        Show messages in time frame
+
+                -n: Show n mo;st recent entries
+
+                --help: Reference journalctl args
+
+10.4: Kernel and Boot-time Logging
+        Hard to store logs without depending on a
+        specific implementation
+
+        Boot time logs are stored in an internal buffer
+        of limited size
+                When the system is up, a user process gets
+                rid of the contents
+
+        systemd-journald
+                Reads messages for kernel form device file /dev/kmsg
+
+                journalctl -k / journalctl --dmesg
+                        View messages from /dev/kmsg
+
+        dmseg
+                View kernel boot logs(Linux)
+
+                -n
+                        Set kernel log level
+                        
+                        1-7(Least-Most verbose)
+
+10.5: Management and Rotation of Log Files
+        logrotate
+                Implements variety of log management policies
+
+        logrotate: Cross-Platform Log Management
+                Config
+                        Consists of a series of specifications for
+                        groups of log fields to be managed
+
+                        Options that appear outside the context of a log
+                        file specification apply to all of them
+                                Can be overriden in a spec
+
+                                Can be respecified later in file to modify defaults
+
+                        Options
+                                Compress - compress all nonconurrent versions of log file
+
+                                Daily,weekly,monthly - Rotate log files on sepcified schedule
+
+                                delaycompress - compresses all versions but current and next-most
+                                recent
+
+                                endscript - Marks end of prerotate or postrotate script
+
+                                errors {email} - Emails errors to specified email
+
+                                missingok - Doesn't complain if logfile doesn't exist
+
+                                notifempty - Doesn't rotate the logfile if empty
+
+                                olddir {dir} - Specifies older version of the log file
+                                be placed in dir
+
+                                postrotate - Introduces script to run after log rotation
+
+                                prerotate - Introduces script to run before log rotation
+
+                                rotate {n} - Includes n version of the log in the rotation scheme
+
+                                sharedscripts - Runs scripts only once for the entire log group
+
+                                size {logsize} - Rotates if log file size > logsize(e.g; look, 4M)
+
+                Normally run with cron once a day
+
+                Config File - /etc/logrotate.conf
+
+                Can define .conf files in the /etc/logrotate.d folder as well
+
+10.6: Management of Logs at Scale
+        ELK Stack
+                ElasticSearch(Querying)
+                Logstash(Log Ingestion)
+                Kibana(UI)
+
+        Logging as a Service
+                Splunk - Pricy as shit
+                Sumo Logic, Loggly, Papertrail
+                Aws - Amazon's Cloudwatch Logs
