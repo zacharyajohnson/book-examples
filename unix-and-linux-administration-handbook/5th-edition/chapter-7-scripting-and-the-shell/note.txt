@@ -1,0 +1,455 @@
+08/13/2023
+
+Use sh(shell) scripts to write powerful automation tasks
+in a structured/documentable way
+
+7.1: Scripting Philosophy
+        Write Microscripts
+                Approach every chore with the question
+                "How can I avoid having to deal with issue in the future?"
+
+                Smaller forms of automation(small scripts) are useful if they
+                save time/keystrokes
+
+                Most admins keep short scripts for personal use in $HOME/bin
+
+                Short enough to read at a glance and only need a short
+                message as documentation
+
+                Shell functions
+                        Work similar to shell scripts, but independent of 
+                        search path
+
+                        Stored in memory and need to be parsed each time a new shell is started
+
+                Aliases
+                        Used to alias a set of commands/functions to a name
+
+                        Ex: alias='ls -Fh'
+
+        Learn a Few Tools Well
+                Lots of software are encountered in IT
+                Get by reading docs and learning just enough
+
+                There are some things that are worth having in depth knowledge
+                        A shell(POSIX sh)
+                        A text editor(Vim)
+                        A scripting language(sh)
+
+                        These are used constantly by you so they are worth learning
+
+        Automate All the things
+                Other things besides shell scripts can be used for automation
+
+                Take advantage of automation as much as possible
+
+        Pick the Right Scripting Language
+                sh/shell
+                        Standard for admin scripts
+
+                        Used for light tasks such as
+                                Automating a sequence of commands
+
+                        Always available/portable, few dependencies
+
+                        Not elegant
+                                Weird syntax
+
+                                Lacks powerful text processing features
+
+                Ruby/Python
+                        Modern languages suited to administrative tasks
+
+                        Powerful text processing features
+
+                        Can be a pain to install and setup its environment
+                        
+                        Lots of dependencies
+
+        Follow Best Practices
+                When run with inappropriate arguments, scripts should print a usuage message
+                and 3exit(--help message can help with this)
+
+                Validate inputs and sanity check derived values
+
+                Return a meaningful exit code
+                        0 for success
+                        Nonzero for failure
+
+                Use appropriate naming conventions for variables, scripts, and routines
+                Keep it consistent with the language / team style
+                        Variables/Functions
+                                Underscores for long names
+                        Scripts
+                                Dash for long names
+
+                Consider writing a style guide to keep scripts consistent with each other
+
+                Start every script with a comment block that tells what the script does
+                and what parameters it takes. If the script requires nonstandard tools,
+                libraries, or modules to be on the system list those
+
+                Comment useful things such as reasons for an algorithim, references used,
+                any pain points etc.
+
+                Its ok to run scripts as root but don't use setuid. Use sudo to implement
+                access control policies instead
+
+                DONT SCRIPT / COPY CODE YOU DON'T UNDERSTAND
+
+                Five Golden Rules for Producing Useful Error Messages
+                        Error messages should go to STDERR, not STDOUT
+
+                        Include the name of the program thats issuing the error
+
+                        State what function or operation failed
+
+                        If a system call fails, include the perror string
+
+                        Exit with some code other than 0
+
+7.2: Shell Basics
+        sh(Bourne shell)
+                Standard on every Unix/Linux machine
+
+                Original Bourne shell code made it out of AT&T
+                licensing hell
+
+                Today manifested in form of the Almquist shell
+                        Known as ash, dash or simply sh
+                or the "bourne-again" shell, bash
+
+        Almqust shell(ash/dash/sh)
+                Reimplementation of the original Bourne shell
+                without extra frills
+
+                Exists mainly to run sh scripts efficently
+
+        Bash
+                Focuses on interactive usability
+
+                Can run scripts for original Bourne shell
+
+                Not tuned for scripting
+
+                Universal standard, built for portability between systems
+
+        Korne shell(ksh)
+                Bourne shell offset
+
+        Z shell(Zsh)
+                Bourne shell offset
+
+                Has broad compatibility with sh, ksh, and bash
+
+                Features
+                        Spelling correction 
+
+                        Enhanced globbing
+
+                Used as default shell for MacOS
+
+        The following material applies to the sh lineage
+                bash, ksh, zsh, and sh
+        but not csh and tcsh
+
+
+
+        Command Editing
+                set -o vi
+                        Set shells command-line editing to vi mode
+
+                        Starts in insert mode
+
+        Pipes and Redirection
+                Each process has three communication channels
+                        Standard input(STDIN)
+                        Standard output(STDOUT)
+                        Standard error(STDERR)
+
+                        Inherited from parent process initially
+                        so they might not know where they lead
+
+                        Can be
+                                Term window
+                                File
+                                Network Connection
+                                Channel to another process
+
+                Each communication channel is named with a file descriptor
+
+                File descriptor - small integer
+
+                The STD channels are guarunteed to be the following
+                        STDIN(0)
+                        STDOUT(1)
+                        STDERR(2)
+
+                STDIN normally reads from the keyboard and STDOUT/STDERR write
+                output to the screen
+
+                Traditional UNIX commands accept input from STDIN and write output
+                to STDOUT. This covention allows you to string commands together like
+                building blocks
+
+                This can be done with shell symbols
+                 <
+                        Connects commands STDIN to the contents of an existing file
+
+                        Ex: sort < /tmp/bash-users
+                                Sorts contents of file and prints to terminal
+
+                >
+                        Redirects STDOUT
+
+                        Replaces existing files contents
+
+                        Ex: grep bash /etc/passwd > /tmp/bash-users
+                                Copies lines containing word bash from /etc/passwd
+                                to /tmp/bash-users, creating the file if neccessary
+
+                >>
+                        Redirects STDOUT
+
+                        Appends to existing files contents
+
+                >&
+                        Redirect STDOUT/STDERR to same place
+
+                2>
+                        Redirect STDERR only
+
+                | (shell symbol)
+                        Connects the STDOUT of one process to the STDIN
+                        of another
+
+                        Called a pipe
+
+                        Ex: find / -name core 2> /dev/null | less
+                                Sends valid output of find command to the
+                                less command as its input
+
+                To execute a second command only if its precursor completes successfully,
+                use &&
+                        Ex: mkdir foo && cd foo
+
+                Execute the following command only if the proceeding command fails, use ||
+                        Ex: cd foo || echo; "No such directory"
+
+                Can use backslash to break a command into multiple lines
+                                Ex: cp --preserve --recursive /etc/* /spare/ \
+                                    || echo "Did not make backup"
+
+                Multiple commands can be combined into one line using ;
+                        Ex: mkdir foo; cd foo; touch afile
+
+        Variables and Quoting
+                Variables
+                        Names are unmarked in assignments but prefixed with a dollar
+                        sign when their values are referenced
+                                Ex: etcdir='/etc/'
+                                    echo $etcdir
+
+                        During assignments, omit spaces around the = symbol, otherwise
+                        the shell mistakes the variable for a command name and treats
+                        the rest of the l;ine as arguments to the command
+
+                        When referencing a variable you can use curly braces to clarify
+                        where the variable name stops and other text begins
+                                Ex: echo "Saved ${rev}th version of mdadm.conf"
+
+                        All caps variables suggest environment variables
+
+                        Local variables are all lowercase seperated by underscores
+
+                        Case sensitive
+
+                        Single quotes - literal text
+
+                        Double quotes
+                                Literal text
+
+                                Allow globbing(expansion of filename and matching metachars such as * and ?)
+
+                                Allow variable expansion
+
+                        Backquotes(backticks)
+                                Similar to double quotes
+
+                                Allow executing the contents of the string as a shell command
+                                and replacing the string teh commands output
+
+        Environment Variables
+                A set of varialbes that are set on system startup
+
+                Inherited by processes
+
+                printenv
+                        Print current environment variables
+
+                All caps by convention
+
+                Exported into sh's variable namespace
+                        Can be set/read with standard syntax
+
+                export
+                        Prompt shell variable to environemtn variable
+        
+                        Ex: export EDITOR=nano
+
+                Every shell, program, and terminal window has its own copy of the
+                envrionment that can be modified
+
+        Common Filter Commands
+                cut
+                        Seperate lines into fields
+
+                        Default delemiter is TAB, can be changed with -d option
+
+                        -f option sepcifies with fields to include in output
+
+                sort
+                        Sort its input lines
+
+                        Options
+                                -b: ignore leading whitespace
+                                -f: Sort case insensitively
+                                -h: Sort "human readable" numbers
+                                -k: Specifiy columns that form sort key
+                                -n: Compare fields as interger numbers
+                                -r: Reverse sort order
+                                -t: Set field separtor(default whitespace)
+                                -u: Output only unique records
+
+                uniq
+                        Print unique lines
+
+                        Similar to sort -u but has options such as
+                                -c: Count the nubmer of instances of each line
+                                -d: Show only duplicated lines
+                                -u: Show only nonduplicated lines
+
+                        Must be presorted, usually done through sort
+
+                wc
+                        Count lines, words, and characters in a file
+
+                tee
+                        Copy input to two places
+
+                        Sends its input to standard out and a specified file
+
+                        Think of as a tee fixture in plumbing
+
+                head/tail
+                        Review lines from beginning/end of file
+
+                        Options
+                                -n: Display n number lines, default 10
+
+7.3: sh Scripting
+        Limit yourself to Bourne shell syntax
+                IEEE and POSIX standard
+
+        Execution
+                Comments start with a # and continue to end of the line
+
+                Sh scripts can consist of nothing but a series of commands
+
+                Shebang(#!)
+                        First line of an executable
+
+                        Kernel looks for this when deciding how to execute the file
+
+                        Treated as a comment when script is run
+
+                        Ex: #!/bin/sh
+                                Run script using /bin/sh
+
+                        Can also use /usr/bin/env program in shabangs
+
+                To run a script turn on the execute bit
+                        Ex: chmod +x helloworld && ./helloworld
+
+        Input and Output
+                echo - print output to screen
+
+                printf - similar to echo, allows more control over output format
+
+        Spaces in Filenames
+                Spaces are allowed in filenames
+                This is an issue as most commands parse arguments
+                by spaces
+
+                Scripts must be prepared to handle spaces in filenames to work correctly
+                        Can be quoted - "My File Name"
+                        Or can add slashes to escape spaces - My\File\Name
+
+        Command Line Arguments and Functions
+                Command line arguments to a script become arguments
+                whose names are numbered from $1 - $n
+
+                $0 - Name which script is invoked
+
+                $# - Number of command line arguments supplied, doesn't count $0
+
+                $* - Contains all arguments at once, doesn't count $0
+
+                Arguments to sh functions are treated the same way like
+                command-line arguments
+
+        Control Flow
+                if statement
+                        if [test case]; then
+                        elf ...
+                        elf ...
+                        else
+                        fi
+
+                sh comparison operators
+                        String
+                                x = y
+                                x != y
+                                x < y
+                                x > y
+                                -n x (x not null)
+                                -z x (x is null)
+                        Numeric
+                                x -eq y
+                                x -ne y
+                                x -lt y
+                                x -le y
+                                x -gt y
+                                x -ge y
+
+                sh file evaluation operators
+                        -d file
+                                True if file exists and is a directory
+                        -e file
+                                True if file exists
+                        -f file
+                                True if file exists and is a regular file
+                        -r file
+                                True if user has read permissions on file
+                        -s file
+                                True if file exists and is not empty
+                        -w file
+                                True if user has write permissions on file
+                        file1 -nt file2
+                                True if file1 is newer than file2
+                        file1 -ot file2
+                                True if file1 is older than file2
+
+        Arithmetic
+                All sh variables are string valued
+
+                Can force arithmetic to occur with $((..))
+                        Ex:
+                                a=1
+                                b=$((2))
+                                c=$a + $b
+                                d=$((a+b))
+                        
+                        At this point c has the value "1 + 2"
+                        and d has value "3". Both are still treated
+                        as string values
