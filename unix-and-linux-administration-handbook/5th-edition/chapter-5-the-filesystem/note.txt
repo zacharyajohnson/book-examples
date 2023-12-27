@@ -1,0 +1,589 @@
+06/09/2023
+
+5.1: Pathnames
+        Filesystem is unified hierachy that starts at the directory /
+                / is calle dthe root directory
+
+        Filesystem can continue downwards through an arbitrary number of
+        sub directories
+
+        Pathname
+                List of directories that must be traversed to locate a particular
+                file plus that file's filename
+
+                Relative Pathname
+                        Interpreted starting at current directory
+                        Ex: book4/filesystem
+
+                Absolute Pathname
+                        Full path from root dir
+                        Ex: /tmp/foo
+
+                Each dir must be <= 255 characters
+
+                Total path length must be <= 4095 bytes on Linux
+                        If this is exceeded, cd to an intermediate
+                        directory
+
+5.2: Filesystem Mounting and Unmounting
+        The filesystem is composed of smaaller chucks - also called filesystems -
+        each of which consists of one directory and its subdirectories and files
+
+        "File Tree" - overall layout
+
+        "Filesystem" - branches attached to tree
+
+        A filesystem can be anyting that obeys the proper
+        API such as
+                A network file server
+
+                A kernel component
+
+                A memory-based disk emulator
+
+                "loop" filesystem
+                        Lets you mount individual files
+
+        Existing portions of the file tree can be treated
+        as a filesystem
+
+        mount
+                Attaches filesystems to tree
+
+                Maps a directory within the existing file tree(mount point)
+                to the root of the newly attached filesystem
+
+                Previous contents of mount point are lost temporarily as
+                long as a file system is mounted there
+
+                Most mount points are empty directories
+
+                Ex: sudo mount /dev/sda4 /users
+                        Installs filesystem stored on
+                        disk partition /dev/sda4 under
+                        path /users. Can use ls /users to
+                        see filesystem contents
+
+                With no args shows all filesystems currently mounted
+
+        /etc/fstab
+                Lists filesystems that are normally mounted on system
+
+                Allows file system to be checked(fdisk) and mounted(mount)
+                at boot time
+
+        umount
+                Detaches filesystem
+                
+                Complains if you try to umount a filesystem thats in use
+
+                For a filesystem to be detached, there must be no open
+                files/processes or running executable programs that
+                are located there
+
+                umount -f
+                        Force umount a busy filesystem
+
+                        BAD IDEA, DON'T USE
+
+        fuser
+                Identifies proceses using files or sockets
+
+                fuser -c {mountpoint}
+                        Prints processes that uses a file or directory
+                        on the mount point
+
+5.3: Organization of the File Tree
+        Historically messy and not consistent
+
+        man hier for more info
+
+5.4: File Types
+        Most filesystems define seven file types
+                Regular files
+                Directories
+                Character device files
+                Block device files
+                Local domain sockets
+                Named pipes(FIFOs)
+                Symbolic links
+
+        file
+                determines type of file
+
+                Ex: file /user/include or file /bin/sh
+
+                Knows about standard file types and common formats
+                used within regular files
+
+        ls
+                Used to investigate files
+
+                Ex: ls -ld /usr/include
+                        Shows info about /usr/include directory
+
+                        Output
+                                drwxr-xr-x 27 root root 4096 Jul  15 20:57 /usr/include
+                                
+                                First letter of output encodes file type, in this case d for dir
+
+                File encodings used by ls
+                        Regular file
+                                Symbol: -
+                                Created by: cp, editors, etc
+                                Removed by: rm
+
+                        Directory
+                                Symbol: d
+                                Created by: mkdir
+                                Removed by: rmdir, rm -r
+
+                        Character device file
+                                Symbol: c
+                                Created by mknod
+                                Removed by: rm
+
+                        Block device file
+                                Symbol: b
+                                Created by: mknod
+                                Removed by: rm
+
+                        Local domain socket
+                                Symbol: s
+                                Created by: Socket system call
+                                Removed by: rm
+
+                        Named pipe
+                                Symbol: p
+                                Created by: mknod
+                                Removed by: rm
+
+                        Symbolic link
+                                Symobl: l
+                                Created by: ln -s
+                                Removed by: rm
+
+        rm
+                Deletes files
+
+                rm -- file1 file2
+                        Used to denote files to delete
+
+                rm -i
+                        Confirm deletion of each file at terminal
+
+06/11/23
+
+        Regular Files
+                Consists of a series of bytes
+
+                Filesystems impose no structure on them
+
+                Ex: Text files, executable programs, shared libraries
+
+                Sequential access and random access are allowed
+
+        Directories
+                Contains named references to other files
+
+                mkdir - Create directories
+
+                rmdir - Remove empty directories
+
+                rm -r
+                        Recursivly remove empty directories, including contents
+
+                Special Entries
+                        "." - Refers to directory
+                        ".." - Refers to parent directory
+
+                        For root dir, "." and ".." refers to  itself,
+                        since its the start of the tree
+
+        Hard Links
+                A reference to a files data stored on disk
+
+                References are typically file names
+
+                File names are stored in its parent directory and
+                points to data on disks
+
+                Any changes via a hardlink will change the others
+
+                Filesystems will keep a count of references and only
+                release the files data blocks when the last reference is deleted
+
+                Cannot cross filesystem boundaries
+
+                ln
+                        Create hard links
+
+                        ln oldfile newfile
+                                Makes a hard link(new file) to
+                                old files data
+
+                        ln -l
+                                List links to a given file
+
+                rm
+                        Remove hard links
+
+                Underlying attributes of file(ownership/permission) are
+                shared between links
+
+                Not a distinct file type. Instead it is implemented by
+                allowing more than one directory entry to point to the same file
+
+        Character and Block Device Files
+                Device files
+                        Let programs communicate with systems hardware and peripherals
+
+                        Standard communication interface that looks like a file
+
+                        When a request refers to a device file it is passed to
+                        it corresponding device driver
+
+                Device driver
+                        Driver software for system devices
+
+                        Takes care of managing each device
+
+                        Loaded/included by kernel
+                                Kernel itself is abstract and hardware independent
+
+                Device files are not device drivers. They are redezvous points that
+                communicate with drivers. They are not drivers themselves
+
+                Device files are characterized by major and minor device numbes
+                        major - tells kernel what driver the file refers to
+                        minor - tells kernel which physical unit to address
+
+                        Ex:
+                                /dev/tty0
+                                        Major version 4(Serial Port)
+                                        Minor version 0(First serial port)
+
+                /dev
+                        Where device fles live
+
+                        Automatically mounted as special filesystem type
+
+                        Maintained by the kernel with help from a user level daemon
+
+        Local Domain Sockets
+                Sockets - connections between processes that allow them to communicate
+
+                Serveral kinds of sockets, most involving the network
+
+                Local Sockets
+                        Only Avaliable locally
+
+                        Referred by a filesystem object isntead of a network port
+
+                        Sometimes called "Unix domain sockets"
+
+                        Created with socket system call
+
+                        Removed with rm command or unlink system call
+                        once they have no more users
+
+        Named Pipes
+                Allow communication between two processes running on the same host
+
+                Also known as FIFO files
+                        First in First Out
+
+                Created with mknod and removed with rm
+
+                Serves similar purpose to local domain sockets
+
+        Symbolic Links
+                Points to a file by name
+
+                Hard Links vs Symoblic Links
+                        Hard links are direct reference to file data
+
+                        Symoblic links are indirect reference by name. Distinct
+                        from the files they point to
+
+                Can refer to files on other filesystem or nonexistent files
+
+                Create with ln -s
+
+                Remove with rm
+
+                Can contain absolute or relative paths
+
+                Ex: sudo ln -s archived/secure /var/data/secure
+                        Links /var/data/secure to /var/data/archieved/secure
+
+                        ls -l /var/data/secure
+                                Show info on symbolic link
+
+                File permissions for symoblic links are dummy values
+                        Permission to create, remove, or follow the link is
+                        controlled by the containing directory
+
+                        Read, write, and exdcute permissions on the link target are
+                        granted by the targets own permissions
+
+5.5: File Attributes
+        Every file has 12 bits
+                9 permission bits
+                        Controls who can read, write, and execute file contents
+                3 permission bits
+                        Affect the operation of executable programs
+
+                Called the files "mode"
+
+                Can be altered by chmod
+
+        4 bits of file type info set on file creation, can't be changed
+
+        The Permission Bits
+                Nine permission bits determine what operations can be performed
+                on a file and by whom
+
+                Three sets of permissions for
+                        Owner of the file
+                        Group owners of the file
+                        Everyone else
+                Displayed in the above order
+
+                Each set has 3 bits
+                        Read
+                                Octal value 4
+                        Write
+                                Octal value 2 
+                        Execute
+                                Octal value 1
+                In the above order
+                Read is highest bit, write is middle, and execute is lowest bit
+
+                A user may fit into multiple permission categories, but only the
+                most specific permissions apply
+                        user -> group -> other
+
+                Read bit
+                        Regular file - allows the file to be opened and read
+
+                        Directory - list files within directory
+                Write bit
+                        Regular file - allows the contents of the file to be modified
+                        or truncated. Ability to delete/rename is controlled by permissions
+                        on its parents directory
+
+                        Directory - Allows creation, renaming, and deletion of files within
+                        directory; modify directory attributes
+
+                Execute bit
+                        Regular file - allows file to be executed
+                        Two types of executable files
+                                Binaries
+                                Scripts
+                                        Interpreted by shell
+
+                                        Starts with shabang(#!)
+
+                                        Defaults to the .sh file if shabang not specified
+
+                        Directory - Allows user to enter directory and access files and directories
+                        inside
+
+        The setuid and setgid bits
+                Allow programs to access files and processes that would otherwise be off-limits
+                to the user that runs them
+
+                setuid(4000) and setgid(2000)
+                        octal values
+
+                Directory
+                        setgid
+                                Newly created files within the directory take
+                                on group ownership of the directory rather than
+                                the default group of the user that created the file
+
+        The Sticky Bit
+                octal value 1000
+
+                Regular files
+                        Ignored when set, no longer important
+
+                Directory
+                        Won't allow deletion/renaming of a file unless you are owner
+                        of the directory, owner of the file, or root
+
+        ls: List and Inspect Files
+                ls -l or ls -ld(directory)
+                        Inspect important filesystem info
+
+                        Ex: ls -l /usr/bin/gzip
+                                Output: rwxr-xr-x
+                                        First char - file type
+                                        Rest are three set of permission bits
+                                                owner-group-other
+                                                        read-write-execute
+                                If setuid bit is set, the x representing the owners
+                                execute permission will be replaced with s
+
+                                If setgid bit is set, the x for group would be
+                                set to s
+
+                                If sticky bit is set, the x for other would be set as t
+
+                                If etiher setuid/setgid or sticky bit is set but the corresponding
+                                execute bit is not, they are shown as S or T respectivily
+
+                                Output(cont)
+                                        4
+                                                Files hard link count
+
+                                                Incremented each time hard link is created
+
+                                                Does not increase due to symbolic links
+
+                                                Directories have at least two hard links
+                                                        Link from parent directory
+                                                        Link from "." inside itself
+
+                                        root wheel
+                                                Owner and group(in order)
+
+                                                Filesystem stores these as UID and GID
+
+                                                If text versions are displaying they may
+                                                have been deleted from /etc/passwd or /etc/group
+
+                                        37432 Nov 11 2016 /usr/bin/gzip
+                                                Size(bytes), date of last modification, name of file
+
+                                                ls -l /dev/tty0
+                                                        For device files, size will be repalced by
+                                                        major number, minor number
+
+                                                        Ex: crw--w----- 1 root tty 4,0
+
+                                Complete output: -rwxr-xr-x 4 root wheel 37432 Nov 11 2016 /usr/bin/gzip
+
+                ls -i
+                        Show files "inode number"
+                                Interger associated with contents of file
+
+                                Pointed to by directory entries(file names)
+
+                                Entries that have hard links to the ssame file have
+                                the same inode number
+
+                                Useful to figure out all the hard links if link count > 1
+
+                ls -a
+                        Show all entries in a directory(Even hidden files that start with a dot0
+
+                ls -t
+                        Sort files by modification time
+
+                ls -tr
+                        Sort files by reverse chronological order
+
+                ls -F
+                        Alter output to distinguish files and directories
+
+                ls -R
+                        List recursivly
+
+                ls -h
+                        List file sizes in human readable form(e.g. 8K or 53M)
+
+        chmod: Change permissions
+                Changes permissions of file
+
+                Only owner of file and root can change permissions
+
+                First arg, permission to be assigned
+                        Two ways to specify
+                                Octal(Absolute)
+                                Mnenomic(Relative)
+
+                        For octal
+                                First digit is spec for owner
+                                Second is group
+                                Third is other
+
+                                To set setgid, setuid, or sticky bits,
+                                use 4 digits instead of 3(They come first)
+
+                Second arg ownard is list of files to apply permissions to
+
+                chmod example(Octal Notation)
+                        chmod 711 myprog
+                                read bit = 4
+                                write bit = 2
+                                execute bit = 1
+
+                                For myprog, owner has
+                                read/write/exec privilages,
+                                and group/other only has execute
+                                privilages
+
+                chmod example(Mnenomic Notation)
+                        chmod u+x myprog
+                                Add execute privliges to owner
+
+                        Set of targets
+                                u - user
+                                g - group
+                                o - other
+                                a - all
+
+                        Operators
+                                + - add
+                                - - minus
+                                = - set
+
+                        Set of Permissions
+                                r - read
+                                w - write
+                                x - execute
+
+        chown and chgrp: Change Ownership and Group
+                chown
+                        Change files owner
+
+                        First arg is new owner
+
+                        Second arg is files to change
+
+                        Can change owner and group at once
+                                Ex: chown user:group file ...
+
+                                Can omit user or group
+
+                chgrp
+                        Can files group
+
+                        First arg is new group
+
+                        Second + are files to change
+
+                Both include -R flag to recursivly change owner/group
+                of directory and all files beneath it
+                        Ex: chown -R matt ~/matt/restore
+                        Ex: chgrp -R staff ~/matt/restore
+
+        umask: Assign Default Permissions
+                Used to set default permissions given to created files
+
+                Every process has umask attribute, which is inherited from shell.
+                Can be changed by running umask command
+
+                Ex: umask 027
+                        All permissions for owner
+                        No write for group
+                        No permissions for other
+
+                Default umask is 022
+                        All permissions for owner
+                        No write for group/other
+
+                A files permissions when created are whatever the creating program requests
+                minus whatever the umask forbids
