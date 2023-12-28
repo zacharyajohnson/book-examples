@@ -1,0 +1,552 @@
+09/09/2023
+
+20.1: I Just Want to Add a Disk!
+        Steps
+                Attach a drive
+
+        Linux Recipe
+                lsblk - List sytem disks
+                        Use to identify new drive
+
+                Install partition table to disk
+                        parted
+                        gparted
+                        fdisk
+                        cfdisk
+                        sfdisk
+
+                Create parition with above commands
+
+                mkfs - create filesystem in partition
+                        Ex: sudo mkfs -t ext4 -L spare /dev/sdb1
+                                Creates ext4 file system at /dev/sdb1
+                                partition
+
+                                Has label "spare"
+                                        Can be used to refrence drive like
+                                        in mount
+
+                                        Persists even if device name changes
+
+                Create mount point and mount paritition
+                        Ex: sudo mkdir /spare
+                            sudo mount LABEL=spare /spare
+
+                Edit /etc/fstab to have filesystem automatically mounted at boot time
+                        Ex: LABEL=spare /spare ext4 errors=remound-ro 0 0
+
+09/09/2023
+
+20.2: Storage Hardware
+        Comparison of HDD and SSD Technology (2017)
+                HDD
+                        Typical Size: < 16TB
+                        Random Access Time: 8ms
+                        Sequential Read: 200 MB/s
+                        Random Read: 2 MB/s
+                        IOPS: 150 ops/s
+                        Cost: $0.03/GB
+                        Relability: Poor
+                        Limited Writes: No
+
+                SSD
+                        Typical Size: < 2TB
+                        Random Access Time: 0.25ms
+                        Sequential Read: 450 MB/s
+                        Random Read: 450 MB/s
+                        IOPS: 100,000 ops/s
+                        Cost: $0.26/GB
+                        Relability: Poor
+                        Limited Writes: In theory
+
+        Hard Disks
+                Physical Parts
+                        Several rotating plates coated with magnetic film
+
+                        Read / written to by tiny skating heads mounted
+                        on a metal arm that swings back and forth to
+                        position them
+
+                Since operations are physical there are delays if the arm needs
+                repositioned
+
+        Hard Disk Relability
+                Fail frequently
+
+                Hard disks that are > two years old have annual failure rate (AFR)
+                of 6%
+
+                75% of disks don't make it to five years
+
+                Backblaze
+                        Posts stats about hard drives
+
+                        Cloud provider
+
+                        Matches original Google study
+
+        Failure Modes and Metrics
+                Caused by
+                        Platter surface defects (Bad blocks)
+
+                        Mechanical failures
+
+                Drives will attempt to correct bad by moving data
+                to a different block
+
+                When block filure is visible at OS level remove it
+
+                Mean of time between failures(MTBF)
+                        Hours
+
+                        Average for enterprise drives is
+                        1.2 million hours
+
+                        Drive realiablity
+
+                        Inverse of AFR
+                                After break in but before wear out
+
+        Drive Types
+                Only two manifactuers of hard drives
+                        Seagate
+                        Western Digital
+
+                Value drives
+                        Lots of storage
+                        Low price point
+                        OK performance
+
+                Mass market performance drives
+                        Higher spindle speeds and larger caches
+
+                        Single users access patterns
+
+                        Run hot
+
+                NAS drives
+                        Intended to be used anywhere where multiple drives
+                        are housed and accessed together
+
+                        Designed to be constantly on and working
+
+                        Balance performance, reliability, and low
+                        heat emission
+
+                        Longer warranty
+
+                        Pricing between value and performance drives
+
+                Enterprise Drives
+                        Non SATA interfaces
+
+                        Expensive
+
+                        Uncommon features
+
+                        Premium drives with long warranties
+
+        Solid State Disks
+                Spreads reads and writes accross banks of flash memory cells
+
+                Cells are individually slower than HDDs, but are overall faster
+                because of parallelism
+
+                Perform well wwhen data is read / written more randomly
+
+                More expensive per GB
+
+                Anand Shimp: Article on SSD technology
+                        tinyurl.com/dexnbt
+
+        Rewritability Limits
+                Each poge of flash memory can only be rewritten a number
+                of times (typically 100,000)
+                        Writes are distributed accross
+                        pages via firmware
+
+                        Stream 100MB/s of data to a 500GB SSD for 15 continous
+                        years to hit limit
+
+        Flash memory and Controller Types
+                Constructed from serveral types of flash memory
+
+                Main difference is how much info is stored in each location
+                        Single level cells (SCC memories)
+                                Store single bit
+                                Fastest, most expensive
+
+                        Multilevel cells (MCC)
+
+                        Triple-level ceells (TLC)
+
+                Controllers that controol SSDs are still evolving
+                        Most companies are open to what they use
+
+20.3: Storage Hardware Interfaces
+        The SATA Interface
+                Serial ATA
+                
+                Predominant hardware interface for storage
+
+                Supports high transfer routes (6GB/s)
+
+                Native support for hot-swapping and (optional) command
+                querying
+
+        The PCI Express Interface
+                Perpheral COmponent Interconnect Express
+
+                Used on PC motherboard for decade plus
+
+                Perdominal standard for connecting all kinds
+                of add-on circuit boards
+
+                Flexible and fast signal rate
+
+                Faster than SATA
+
+        USB
+                Universal Serial Bus
+
+                Used to connect external hard drives or USB
+                thumb drives
+
+                USB 3.1 - 10 GB/s
+
+                Storage devices never come with native USB interfaces
+                        Usuually SATA drives will have a protocol
+                        converter built into the enclosure
+                                Can buy enclosure seperatly
+                                and mnaully install hard disk of choice
+
+20.4: Attachment and Low-Level Management of Devices
+        Disk Device Files
+                Newly added disk is represented as device file in
+                /dev
+
+                Ex:
+                        Whole Disk: /dev/sda
+                        Partition: /dev/sda1
+
+        Ephemeral Device Names
+                Disk names are assigned in sequence as kernel adds
+                new devices
+
+                Adding a disk or restarting the sytem can cause an
+                existing name to change
+
+                Never
+                        Make changes to dis/partitions without identifying
+                        identity of disk
+
+                        Mention a disk driver in a config file. It can change
+
+                /dev/disk - Lists disk by various stable characteristics
+
+                parted -l
+                        List sizes, partition tables, model numbers, and
+                        manufacturers of every disk on the system
+
+        ATA Secure Erase
+                PATA / SATA
+
+                "Secure Erase" command
+                        Overwrites data on disks that prevents recovery
+                        efforts
+
+                        U.S. Department of Defense approved for security levels
+                        less than "secret"
+
+                rm -rf does not erase data, leaves everything intact and
+                recoverable with software
+
+                Multiple erases on disk
+
+                Resets SSD to fully erased state
+
+                Password protected at drive level
+
+
+                SAS has no equivalent command
+
+                Dariks Boot/ Nuke
+                        Sanitize entire PC system at once
+
+                        Runs on own boot disk
+
+        hdparam and camcontrol: Set Disk and Interface Parameters
+                hdparam
+                        General way to interact with firmware of SATA
+                        and SAS disks
+
+                        Set driver power options, enable / disable noise
+                        reduction options, set read only flag, print
+                        detailed drive info
+
+                Hardware Monitoring with SMART
+                        Inplemented by SATA devices
+
+                        Detailed form of status reporting
+
+                        Four params have a 56% percent change of predicting
+                        drive failure
+                                Scan error count
+                                Reallocation count
+                                Off-line rellacation count
+                                Number of sectors on probation
+
+                        All params should be zero.
+
+                smartctl
+                        Smartd daemon
+                                - Config at /etc/smartd.conf
+
+20.5: The Software Side of Storage: Peeling the Onion
+        Elements of a Storage System
+                Storage Device
+                        Anything that looks like a disk
+
+                        Ex: Hard disk, flash drive, SSD, RAID array
+
+                        Allows random access, handles block I/O, represented
+                        by device file
+
+                Partition
+                        Fixed size subsection of storage device
+
+                        Has own device file, ad acts like independent
+                        storage device
+
+                Volume Groups / Logical Volumes
+                        Associated with logical volume managers(LVMs)
+                                Aggregate physical devices to form pools
+                                of storage called volume groups
+
+                        Volume group - can be subdivided into logical volumes
+
+                RAID Array
+                        Redundant Array of Inexpensive / Independent Disks
+
+                        Combines multiple storage devices into one virtualized device
+
+                        Can include anything that acts like disk
+
+                        Implemented by OS or hardware
+
+                Filesystem
+                        Mediates between raw hardware adn the interface people expects
+
+                        Detrmines
+                                Where and how contents of ifle are stored
+
+                                How filesyste namesapace is represented and searched
+                                on disk
+
+                                How system is made resistent to corruption
+
+20.6: Disk Partitioning
+        Divides up a disk into sperate chunks of knwon size
+
+        Traditionally
+                Lowest level of disk management
+
+                Only disks could be partitioned
+
+                No longer true
+
+        Perfer logical volume management
+
+        No snapshot management, difficult to reverse
+
+        Simple and everything understands it
+
+        All systems have root "partition"
+                Includes / and local host config data
+
+        Subdirectories, /var, /usr, /tmp, etc can be seperated
+        into seperate partitions
+
+        General Guidelines
+                Put /var on its own partition to prevent
+                logs filling up disk
+
+                Put /home dir in seperate partition in case
+                root partition dies
+
+        Linux Partitioning
+                gparted and parted
+
+20.7: Logical Volume Management
+        Allows relocation of space dynamically from partitions
+
+        Groups individual storage devices into "volume groups"
+
+        The blocks in a volume group can be allocted to "logical volumes",
+        which are represented by block disk files and act like disk partitions
+
+        More flexible and powerful than disk partitions
+
+        Can
+                Move logical volumes among different physical devices
+
+                Grow and shrink logical volumes on the fly
+
+                Take copy on write snapshots of logical volumes
+
+                Replace on-line drives without interrupting service
+
+                Incorporate mirroing or striping in logical volumes
+
+        Can be put together in variety of ways
+                Concatenation
+                        Keeps each disk physical blocks together
+
+                        Lines up devices one after another
+
+                Striping
+                        Interleaves components so that adjacent
+                        blocks are spread over multiple physical
+                        disks
+
+        Linux Logical Volume Management
+                LVM2
+
+                LVM commands in Linux
+                        Physical Volume
+                                Create - pvcreate
+                                Inspect - pvdisplay
+                                Modify - pvchange
+                                check - pvck
+
+                        Volume Group
+                                Create - vgcreate
+                                Inspect - vgchange
+                                Extend - vgextend
+                                Inspect - vgdisplay
+                                Check - vgck
+                                Enable - vgscan
+
+                        Logical Volume
+                                Create: lvcreate
+                                Modify: lvchange
+                                Resize: lvresize
+                                Inspect: lvdisplay
+
+                Individual disk and partitions (physical volumes)
+                are gathered into storage pools called volume groups
+
+                Volume groups are subdivided into logical volumes, which contain
+                filesystems
+
+                "Physical Volumes" can be
+                        Disks
+                        Disk Partitions
+                        RAID arrays
+
+                Can be managed through lvm command / subcommands
+
+20.8: RAID: Redundant Arrays of Inexpensive Disks
+        A system that distributes or replicates data cross multiple disks
+
+        Helps avoid data loss, minimize downtime, and potentially increases performance
+
+        Can be implemented in hardware and software
+
+        RAID levels
+                RAID does two things
+                        Improve performance by "striping" data across multiple
+                        drives
+
+                        Replicate data across multiple drives, decreasing risk
+                        associated with a failed disk
+
+                Two forms of replication
+                        Mirroring
+                                Data blocks are reproduced bit for bit on
+                                several different drives
+
+                        Parity Schemes
+                                One or more drivers contain an error correcting
+                                checksum of the blocks on the remaining data drives
+
+                        Mirroring is faster but consumes more space. Parity schemas are more
+                        space efficent but has lower performance
+
+                RAID is configured into levels, which specify details of the
+                paralleism and redundancy implemented by the array
+
+                RAID 0
+                        Increases performance
+
+                        Combines two or more drives of equal size
+
+                        Stripes data alternativly among disks in pool
+
+                        Reads / writes are spread amoung several disks
+                                Improves write / access times
+
+                        Has terrible reliability compared to seperate disks
+
+                RAID 1
+                        Mirroring
+
+                        Writes are duplicated to two or more drives simultaneously
+
+                        Makes writing slower compared to single drive
+
+                        Makes reading faster since there are multiple disks
+
+                RAID 1 + 0
+                        Stripes of mirrors
+
+                RAID 0 + 1
+                        Mirrors of stripes
+
+                RAID 5
+                        Stripes both data and parity info
+
+                        Adds redundancy and improves read
+                        performance
+
+                        More efficant in disk space than RAID 1
+                                67% vs 50%
+
+                        Can handle one drive failure
+
+                RAID 6
+                        Similar to RAID 5
+
+                        Two parity disks
+
+                        Can handle two drive failures without losing data
+
+                RAID 2-4 are rarely used
+
+                RAID 0 and RAID 1 features are included in logical volume managers
+
+                ZFS and BTRFS support RAID, logical volume managers, and file systems
+                in one package
+
+        mdadm: Linux Software RAID
+                md - "multiple disks" driver
+                        Linux software RAID implementation
+
+                        Uses mdadm
+
+                mdadm
+                        Config
+                                /etc/mdadm/mdadm.conf
+                                /etc/mdadm.conf
+
+20.10: Traditional Filesystems: UFS, EXT4 and XFS
+        Seperate code bases and histories
+
+        Old school approach
+                Volume management and RAID
+                implemented seperatly
+
+                Limited to file storage on block devices
+                of defined size
+
+        ZFS / BTRFS include everything, next gen filesystem

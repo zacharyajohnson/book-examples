@@ -1,0 +1,350 @@
+08/16/23
+        
+Kernel
+        Enforces rules
+        
+        Sharing resourcs
+
+        Provide core services user processes rely on
+
+        Hides details of system hardwar underneath an
+        abstract API. Provides the following:
+                Management and abstraction of hardware devices
+
+                Processes and threads(And ways to communicate among them)
+
+                Management of memory(Virtual memory and memory space protection)
+
+                I/O Faciliteies
+                        Filesystems, network interfaces, serial interfaces, etc
+
+                Housekeeping functions
+                        Startup, shutdown, trimers, multitasking,etc
+
+Only device drives are aware of the specific capabilites and
+communication protocs of the systems hardware
+        User / kernel programs don't know anything about the fine
+        details
+
+11.3: Devices and their Drivers
+        Device Driver
+                Abstraction layer that manages the system's interactioni
+                with a particular type of hardware so the rest of the kernel
+                doesn't need to know the specifics
+
+                Translates between hardware commands understood by device to
+                API defined by the kernel
+
+                Helps keep rest of kernel device-independent
+
+                System specific / sometimes kernel revision specific
+
+                Hardware vendors oftern publish drivers for Linux / FreeBSD
+
+        Device Files and Device Numbers
+                Drivers can be accessed both from the kernel and from user space
+                via device files
+
+                Device Files
+                        Found in /dev directory
+
+                        Kernel maps operations on these into calls to the
+                        code of the driver
+
+                        Have a major / minor version
+                                Can be seen with ls command
+
+                        Two types
+                                Character
+                                        Read / written one byte at a time
+
+                                        Output in ls -la (c)
+
+                                Block
+                                        Read / written one block(group of bytes, usually multiple of 512)
+                                        at a time
+
+                                        Output in ls -la (b)
+
+                Pseduo-devices
+                        An abstraction implemented as a device driver that doesn't control      
+                        an actual device
+                                Pseudo-TTY(PTY)
+                                /dev/zero
+                                /dev/null
+                                /dev/urandom
+
+                ioctl system call
+                        Used to pass message directly from userspace into driver
+
+                        Used when an operation doesn't have direct filesystem representation
+                                Ex: Ejecting a DVD
+
+                Linux also uses Netlink Sockets System
+
+        Challenges of Device File Management
+                Large amounts of dev files as time goes on
+                        18,000 files on RHEL 3
+
+                Device identification not transient
+                        /dev/sda could represent a different
+                        device due to disconnection or reboots
+
+                Network interfaces
+                        Devices but don't have device files
+
+                        Managed by the Predictable Network Interface Names System
+                                Assigns interface names that are stable accross reboots,
+                                changes in hardware, and chagnes in drivers
+
+        Manual Creation of Device Files
+                Rarely needed
+
+                mknod
+                        Make device file
+
+                        Ex: mknod {filename} type(b/c) {major} {minor]
+
+        Modern Device File Management
+                Linux / FreeBSD autoamte management of device files
+                        Device files are created when new devices are detected
+
+                        Device files are deleted when a device goes away
+
+                udev daemon
+                        Create device files based on kernel events
+
+                udevd deamon
+                        Handles advanced device actions such as automounting, etc.
+
+        Linux Device Management
+                sysfs
+                        Where udevd gets its raw data
+
+                        Virtual in-memory filesystem
+
+                        Provides detailed and well orgainzed info about
+                        system devices, their configurations, and their state
+
+                        Available in user and kernel space
+
+                        Mounted at /sys
+                                One file represents one attribue of the underlying device
+
+                        Subdirectories
+                                block - Info about block devices
+
+                                bus - Buses known to kernel
+                                        PCI-E, SCSI, USB, etc
+
+                                dev - Device information split between
+                                character and block devices
+
+                                devices - An ancestrally correct representation
+                                of all discovered devices
+
+                                firmware - Interfaces to platform specific subsystems
+                                such as ACPI
+
+                                fs - A directory for some, but not all, filesystems
+                                known to the kernel
+
+                                kernel - Kernel internals such as cache and virtual
+                                memory status
+
+                                module - Dynamic moudles loaded by the kernel
+
+                                power - a few details about the systems power state; mostly unused
+
+                /proc filesystem
+                        Former location for device config info
+
+                        More random info and less organized than /sys
+
+                        Around for backwards compatibility
+
+                        USE /sys
+
+08/17/2023
+                udevadm
+                        Queries device info, triggers events, controls the udevd daemon
+                        , and moinotrs udev and kernel events
+
+                        Primarily used by admins to build / test rules
+
+                        First argumetn has to be one fo the following sub commands
+                                info
+                                trigger
+                                settle
+                                control
+                                monitor
+                                test 
+
+                        Ex: udevadm info -a -n sdb
+                                Shows all udev attributes for sdb
+
+                        All paths in output are relative to the /sys directory
+
+                        Output is formatted so it can back into udev when constructing
+                        rules
+
+        Rules and Persistent Names
+                Rules that define what udevd does for certain devices
+                for different events
+
+                /lib/udev/rules.d/
+                        Default rules
+
+                        Never need to change
+
+                /etc/udev/rules.d/
+                        Local rules
+
+                        Can override default rules by
+                        make a file with the same name
+
+11.4: Linux Kernel Configuration
+        Three ways
+                Modifying tunable(dynamic) kernel configuration parameters
+
+                Building a kernel from scratch
+                        Done by compiling it from source code, possibly
+                        with modifications and additions
+
+                Loading new drivers and modules into an existing kernel
+                on the fly
+
+        Tuning Linux Kernel Parameters
+                /proc/sys
+                        Special files that are backdoors into kernel
+
+                        Allows to change kernel params dynamically
+
+                        Not all files are writable adn dcoumentation is sparse
+
+                        Ex: echo 32768 > /proc/sys/fs/file-max
+                                Change number of max files allowed to be open at once
+
+                        Changes don't persist between reboots
+
+                sysctl
+                        Can set individual kernel variables either from command line
+                        or from a list of variable=value pairs in a config file
+
+                        /etc/sysctl.conf
+                                Default config file
+
+                                Read at boot time to set initial values of parameters
+
+                                Ex: systctl net.ipv4.ip_forward=0
+                                        Turns off ip forwarding
+
+                                        Variable names are formed by replacing the slashes
+                                        in /pro/sys structure with dots
+
+        Adding a Linux Device Driver
+                Distributed in three ways
+                        A patch against a specific kernel version
+                                Ex: cd kernel-src-dir; Patch-pl < file
+
+                        A loadable kernel module
+
+                        An installation script or package that install the driver
+                                Most common
+
+11.6 Loadable Kernel Modules
+        Available in Linux / FreeBSD
+
+        Allows a device driver or any kernel component
+        to be linked into and removed form the kernel
+        while its running
+
+        Allows kernel to be smaller since only the drivers that
+        are needed are loaded
+
+        Not 100% safe, kernel panics may happen when loading/unloading
+        a module
+
+        Implementation is OS dependent
+
+        Loadable Kernel Modules in Linux
+                Almost everything can be built as a kernel module
+                Exceptions include
+                        Root fileystem type
+                        PS/2 mouse driver
+
+                Stored under /lib/modules/version where version
+                is the linux kernel version returned by uname -r
+
+                lsmod
+                        View currently loaded modules
+
+                modprobe
+                        Add or removed modules from kernel
+
+                        Wrapper around insmod command
+
+                        Understands dependencies, options,
+                        and installation / removal procedures
+
+                        Selects correct module based on kernel version
+
+                        Consults /etc/modprobe.conf on how to handle
+                        each module
+
+                        Ex: sudo modproble snd-usb-audio
+
+                        Ex: sudo modprobe snd-usb-audio nrpacks=8 async_ulink=1
+                                Passing parameters to module as its loaded
+
+                        Ex: modprobe -r
+                                Remove module
+
+                                Only works if reference count it it is zero
+
+                        Ex: modprobe -c
+                                Generate modprobe.conf based on currently loaded
+                                modules
+
+11.9: Kernel Errors
+        Four types
+                Soft lockups
+                Hard lockups
+                Panics
+                "Oops"
+
+        All have a stacktrace associated with it
+
+        Soft lockup
+                Occurs when system is in kernel mode for more
+                than a few seconds and prevents user level tasks
+                from running
+
+                Interval is configurable, but usually around 10
+                seconds
+
+                Kernel stil services interrupts from network interfaces
+                or keyboards
+
+                Data is still flowing in and out of the system
+
+        Hard lockup
+                Similar to soft lockup
+
+                Most processor interrupts go unserviced
+
+        Both cases display a stack trace and a display of
+        the CPU registers("tombstone")
+
+        Both almost always caused by bad hardware, usually memory
+
+        "Oops"
+                Similar to a panic, however it is possible to recover
+                from it
+
+                Generates a tombstone in the kernel message buffer(use dmesg)
+
+                Cause usually listed at top
+
+        Panic
+                Similar to "oops" but uncrecoverable

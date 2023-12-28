@@ -1,0 +1,543 @@
+08/22/2023
+
+TCP/IP - Transmission Control Protocol / Internet Protocol
+        Network system that underlies the Internet
+
+        Hardware and OS independent
+
+        Works on networks of any size topology
+
+13.1: TCP/IP and its Relationship to the Internet
+        ARPANET
+                Progenitor of Internet
+
+                1969 - U.S. Department of Defense
+
+        Internet
+                Collection of private networks owned by
+                Internet Service Providers(ISP) that
+                connect at peering points
+
+        Who Runs the Internet
+                ICANN
+                        Internet Corporation for Assigned Names and Numbers
+
+                        In charge of Internet, has enforcement capability
+
+                        Controls allocation of Internet addresses, domain
+                        names, and port numbers
+
+                        Nonprofit
+
+                ISOC
+                        Internet Society
+
+                        Open membership org that represents Internet users
+
+                        Nonprofit
+
+                        Umbrella organization for technical development of the Internet
+
+                        Parent company of Internet Engineering Task Force
+                                Oversees most technical work
+
+13.2: Networking Basics
+        TCP/IP is a set of network protocols designed to work together
+
+        IP
+                Internet Protocol
+
+                Routes packets from one machine to another
+
+                RFC 791
+
+        ICMP
+                Internet Control MEssage Protocol
+
+                Defines low level support for IP
+                        Error messages, routing assistance, debugging
+
+                RFC 792
+
+        ARP
+                Address Resolution Protocol
+
+                Translates IP addresses to hardware addresses
+
+                RFC 826
+
+                Used in other protocol suites
+
+        UDP
+                User Datagram Protocol
+
+                Implements unverified one way delivery
+
+                RFC 768
+
+        TCP
+                Transmission Control Protocol
+
+                Implements reliable, full duplex, flow controlled,
+                error corrected conversations
+
+                RFC 793
+
+        Arranged in a hierachy, where higher level protocols use the lower
+        level ones
+
+        IPV4 and IPV6
+                IPV4
+                        Been in use for 5 decades
+
+                        4 byte IP addresses
+
+                IPV6
+                        Newer version of IPV4
+
+                        16 byte IP addresses
+
+                        Technelogically surperior and easier to maintain
+
+                        Integrates security and authentication into protocol
+
+                TLDR for why IPV4 is still used
+                        IP addresses can be cut down using
+                        Network Area Translation(NAT)
+
+                        Big name websites such as Amazon, Twitter, and
+                        Stackoverflow use them still
+
+                        Lack of motivation to go to IPV6 even though its better
+
+08/23/2023
+
+13.3: Packet Addressing
+        Network packets must be properly addressed to reach destination
+
+        Addressing schemes
+                MAC(Media Access Control)
+                IPV4 and IPV6
+                Hostnames
+
+        Hardware(MAC) Addressing
+                Link layer
+
+                Each of a hosts network interfaces has one
+
+        IP Addressing
+                IP level
+
+                Hardware independent, used in a particular networks
+                context
+
+                Identifies a specific and unique destination
+
+                Not globally unique with the help of NAT
+
+                NAT
+                        Uses one interfaces IP to handle traffic for multiple
+                        machines
+
+                Mapping between IP addresses and MAC addresses are implemented
+                at the link level
+
+        Hostname "Addressing"
+                IP addresses are too hard to remember
+
+                Hostname
+                        Can be associated with an IP so a user can
+                        type that instead
+
+                        Can be set by
+                                /etc/hosts
+                                LDAP database
+                                DNS
+
+                        Refer to network interfaces
+
+        Ports
+                IP addreesses are not specific enough to address individual
+                processes or services
+
+                TCP/UDP - Extend IP addresses with ports
+
+                16 bit number(1 - 65,535)
+
+                Supplemants an IP to specify a communication channel
+
+                Example services such as SSH and SMTP have standard ports
+
+                Defined in /etc/services
+
+                TCP and UDP ports are unrelated and must be handeled
+                seperatly
+
+                First 1000ish port numbers are reserved
+
+        Address Types
+                IP layer defines serveral addresses that have counterparts
+                at the link layer
+                        Unicast - Addresses that refer to a single network interface
+
+                        Multicast - Addresses that simultanously target a group of hosts
+
+                        Broadcast - Addresses that include all hosts on a local subnet
+
+                        Anycast - Addresses that resolve to any one of a group of hosts
+
+13.4: IP Addresses: The Gory Details
+        IP addresses consist of a network portion and host portion
+                Network portion
+                        Identifies a logical network the address applies to
+
+                Host portion
+                        Identifies a node on the network
+
+        IPV4
+                4 bytes
+
+                Network / host portion set administratively
+
+        IPV6
+                16 bytes
+
+                Network / host portion 8 bytes each
+
+        IPV4 addresses are written as decimal numbers, one for each
+        byte seperated by periods
+                Ex: 209.85.171.147
+
+        127.
+                "Loopback network"
+
+                Fictious network, has no real hardware interface
+                and only one host
+
+                127.0.0.1
+                        Refers to current host
+
+                        Hostname is "localhost"
+
+        ip address
+                Set interfaces IP address
+
+08/24/2023
+
+        IPV4 Address Classes
+                Traditionally IPV4 addresses were seperated into classes
+
+                Depended on first bits of letmost byte
+
+                Determined which bytes were the network / host portion
+                        Today an explicit mask sets this
+
+                Historical IPV4 Address Classes
+                        A
+                                1st byte: 1 - 127
+                                Format: N.H.H.H
+                                Comments: Very early networks, or reserved for DOD
+
+                        B
+                                1st byte: 128 - 191
+                                Format: N.N.H.H
+                                Comments: Large sites, usually subnetted, were hard to get
+
+                        C
+                                1st byte: 192 - 223
+                                Format: N.N.N.H
+                                Comments: Were easy to get, often obatined in sets
+
+                        D
+                                1st byte: 224 - 239
+                                Format: None
+                                Comments: Multicast addresses, not permanently assigned
+
+                        E
+                                1st byte: 240 - 255
+                                Format: None
+                                Comments: Experimental addresses
+
+        IPV4 Subnetting
+                To allow better allocation of IPV4 addresses, you can reassign
+                the network / host portion allocation
+
+                Called "subnet mask" / "net mask"
+                        4 bytes
+
+                        1s correspond to Network
+                                Must be contingous and left most
+
+                        0s correspond to Host
+
+                        8 bits most be assigned to Network and 2 bits
+                        to the Host
+
+                        Ex: Class B Network N.N.H.H
+                                255.255.0.0
+
+                        Assigned using ip or ifconfig
+
+                        ipcalc
+                                Helps calculate host / network allocation
+
+13.5: Routing
+        Direct packet from source to destination
+        In between the two is a maze of networks
+        Takes the form of rules("routes")
+
+        Routing info is stored in a table in the kernel
+
+        Routing Tables
+                ip route show / netstat -r
+                        Show routing table
+
+                A host can only route packets to gateway
+                machines through a directly connected network
+
+                ip route add
+                        Add route to table
+                        Static
+
+                Dynamic routing
+                        Dameon proceses that communicate with each
+                        others host to discover / modify routing
+
+13.6: IPV4 ARP and IPV6 Neighbor Discovery
+        IP is hardware independent, however, hardware
+        addresses must be known to send data through link layer
+
+        IPV4 - ARP(Address Resolution Protocol)
+        IPV6 - Network Discovery Protocol
+
+        Ex: Host A wants to send a packet to Host B on same Ethernet
+                If the host is not on the same network, Host A
+                uses routing to determine the next hop and uses
+                ARP / ND to find router hardware addresses
+
+        Every machine has a ARP / ND cache
+                Contains most recent queries
+
+                ip neigh
+                        Show cache
+                        ip neigh show
+
+13.7: DHCP: The Dynamic Host Configuration Protocol
+        Allows computers to get an IP address, routing, and
+        local DNS server during network connection
+
+        Leases network / admin parameters from an authorized
+        central server
+                IP addresses and netmasks
+                Gateways(default routers)
+                DNS name servers
+                Syslog hosts
+                WINS servers, X font servers, proxy servers, NTP servers
+                TFTP servers(for loading a boot image)
+
+        Client must report to server periodically or lease of item expires
+
+        Can assign info however it wants to as long as its not assigned(addresses)
+
+        Supports static addresses
+                Concentrates config to server
+
+                Client doesn't neet to care
+                
+13.9: Basic network Configuration
+        Steps to add a machine to a local network
+                Assign a unique IP address and hostname
+
+                Configure network interfaces and IP addresses
+
+                Set up a default route and perhaps fancier routing
+
+                Point to a DNS server that allows access to the
+                rest of the Internet
+
+        Hostname and IP Address Assignment
+                Many ways to map hostname to IP
+                        /etc/hosts
+                        LDAP
+                        DNS
+
+                /etc/hosts
+                        Oldest and simpliest way
+
+                        Contains local mappings
+
+                        Must be maintained on each client
+
+                        Good to use if you don't want the rest
+                        of the world to know about a mapping
+
+                        Can mix IPV4 / IPV6 addresses
+
+                        Each line is formatted as: IP hostname
+
+                        hostname
+                                Sets hostname of machine
+                                /etc/hostname
+
+        Network Interface and IP Configuration
+                Network interface
+                        A piece of hardware that can be potentially connected
+                        to the Internet
+
+                Every system has at least two network interfaces
+                        A virtual loopback interface (localhost)
+
+                        One real network card or port
+
+                Multiple Ethernet jacks usually have seperate
+                network interfaces
+
+                ip link show
+                        Show all network interfaces
+
+                Modern network interfaces have autonegation, where
+                it tries to set configurations based on what the user might want
+                        Disable if you manually configure an interface
+
+                ip config
+                        Set IP address for an interface
+
+                        IPV4
+                                Needs netmask as well
+
+                                Possibly disable broadcasting
+
+        Routing Configuration
+                See chapter 15 for more info
+
+                ip route
+                        Command to work with routes
+
+        DNS Configuration
+                Configure via /etc/resolv.conf
+                        Lists DNS domains that should be used to
+                        resolve that are incomplete
+                                Ex: anchor vs anchor.cs.colorado.edu
+                        and the IP addresses of the name servers to
+                        contact for name lookups
+
+                        Should list most stable nameserver first, contacted in order
+
+13.10: Linux Networking
+        ifdown {interface} / ifup {interface}
+                Bring interface up/down
+
+                Needed after config changes
+
+        Network Manager
+                Service run in background
+
+                Includes system app tray for configuring
+                network interfaces
+
+                Can handle transient wireless networks,
+                wireless broadband, and VPNs
+
+                More fluid and designed to be run by users
+
+                Widely adopted by Linux distros
+
+                Good for laptops which change networks
+                frequently
+
+                Might be a hinderance in servers / desktops
+
+        ip: Manually configure a network 
+                ss - Used to examine state of network sockets
+
+                ip
+                        Used for network configuration
+
+                        Second argument is used to specify
+                        what object you want to modify / examine
+                                link
+                                address
+                                route
+
+                        Man pages are divided by subcommand
+                                Ex: man ip-link
+
+                        Also understands help
+                                Ex: ip link help
+
+        Linux TCP/IP Options
+                Can be found in /proc
+                        /proc/sys/net/ipv4
+                        /proc/sys/net/ipv6
+
+                        TCP / UDP configs are in ipv4
+                        folder
+
+                        ipv4/conf or ipv6/conf
+                                Contain parameters
+                                set on an interface level
+
+                                Includes all or default folder to
+                                apply to all interfaces
+
+                sysctl - set /proc variables until reboot
+                
+                For permenant changes add the variable to
+                /etc/sysctl.conf
+
+13.12: Network Troubleshooting
+        General guidelines
+                Make one change at a time. Check if it had the intended
+                effect. If not, revert it
+
+                Document the situation as it was before you got involved
+                and every change you make along the way
+
+                Start at the top of the TCP / IP stack and work
+                down to isolate the layer that is the issue
+
+        ping: Check to See if a Host is Alive
+                ping / ping6
+                        Sends a ICMP ECHO_REQUEST packet to
+                        a targtet host to see if it responds
+
+                        Used to test status of host and segments of
+                        network
+
+                        Most stuff needs to be configured for this
+                        command to succeed
+
+                        ping -n
+                                Prevents reverse lookups on IPS
+
+                                Good way to test if DNS is broken
+
+                        Includes a summary for diagnosis
+
+        Packet Sniffers
+                Listen to network traffic and record or print packets
+                that match criteria of your choice
+
+                tcpdump
+                        Command line packet sniffer
+
+                        Read / write files in tcpdump / libcap format
+
+                        tcpdump -i: Force interface to use
+                        tcpdump -n: Don't do DNS name lookups
+                        tcpdump -v: More verbose output
+                        tcpdump -vv: even more output
+                        tcpdump -w: Store dump to file
+                        tcpdump -r: Read dump from file
+
+                Wireshark
+                        tcpdump on steroids
+
+                        Includes GUI (Wireshark) and CLI (tshark)
+
+                        Can read / write trace files used in other packet
+                        sniffers
+
+                        Capture filters are identical to tcpdump since it use libcap
+
+                        Don't run for prolonged periods since it can be an attack vector

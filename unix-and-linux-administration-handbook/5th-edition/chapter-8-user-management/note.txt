@@ -1,0 +1,233 @@
+08/15/23
+
+Focues on adding/removing users
+
+8.1: Account Mechanics
+        A user is nothing but an unsigned 32-bit integer known
+        as a user ID(UID)
+
+        Everything related to account management revolves around
+        UIDs
+                All kernel calls take UID as an arg to get info
+
+                Kernel API's traditionally looked up user info
+                in /etc/passwd
+
+8.2: The /etc/passwd File
+        List of users recognized by systems
+
+        Can be replaced or extended by one or more
+        directory services
+
+        world-readable
+
+        Historically stored encrypted passwords, but with increasing
+        processing power being able to crack them, they
+        were moved to /etc/shadow, which is not world readable. Now
+        it only contains a placeholder entry for passwords
+
+        Consulted at login time to determine user info
+
+        Each line is one user and has the following fields seperated by colons
+                Login name
+                Encrypted password placeholder
+                UID(User ID) number
+                Default GID(Group ID) number
+                Optional "GECOS" info: full name, office, extension, home phone
+                Home directory
+                Login shell
+
+        Login Name
+                Username
+
+                Must be unique, and may have set character restrictions
+
+                Max limit of 32 characters
+
+                Can't contain colons or newlines(Used in /etc/passwd)
+
+                Case sensitive, traditionally all lowercase letters
+
+        UID(User ID) Number
+                Root(UID 0)
+
+                Psuedo-users
+                        bin
+                        daemon
+
+                        Have fake logins/shells to prevent loging in
+
+                        Used to be owners of commands or files
+
+                Should be kept unique accross orgs
+                        LDAP is a popular solution
+
+                Do not recycle UIDS
+
+        Default GID(Group ID) Number
+                GID - 32 bit unsigned integer
+
+                GID 0 - root/system/wheel
+
+                Historically used to track resource usuage and charge groups
+                accordingly
+
+                Now, mainly used to share access to files
+
+                /etc/group - defines system groups
+
+                Provides an "effective" GID at login time
+
+                Only used in the creation of new files or directories
+
+        GECOS Field
+                Used to record personal info about each user
+
+                No well defined syntax
+
+                Most common syntax is comma seperated and the following entries
+                in the listed order:
+                        Full name
+                        Office number and building
+                        Office telephone extension
+                        Home phone number
+
+                chfn
+                        Change user GECO info
+
+                        Usually only understands /etc/passwd
+                        and not any other directory services
+
+        Home Directory
+                Users default directory at login time
+
+                Used by login shells to look for account specific
+                customizations such as
+                        Shell aliases
+                        Environment variables
+                        SSH Keys
+                        Server fingerprints
+                        Program state
+
+                If missing on login, may display erros or not allow
+                login at all depending on configuration
+
+        Login Shell
+                Normally a command interpretor
+
+                Can be any program
+
+                Default shells
+                        FreeBSD - sh
+                        Linux - bash
+
+                chsh
+                        Allow users to change shell
+
+                        Might not work if using LDAP
+
+8.3: The Linux /etc/shadow file
+        Readable only by root
+
+        Stores users encrypted passwords
+
+        Default on all systems
+
+        Completly seperate from /etc/passd. Both files
+        must be maintained
+
+        One line for each user
+
+        Each line has nine fields seperated by a colon
+                Login name
+
+                Encrypted password
+
+                Date of last password change
+
+                Mininum number of days between password chagnes
+
+                Maximum number of days between password changes
+
+                Number of days in advance to warn users about password expiration
+
+                Days after password expiration that account is disabled
+
+                Account expiration date
+
+                A filed reserved for future use which is currently always empty
+
+        Only username and password is required
+
+        Absolute date fields are specified as the number of days since January 1, 1970
+
+8.5: The /etc/group file
+        Contains the name of UNIX grousp and a list of each groups members
+
+        Each line represents one group
+                Group name
+                Encrypted password or placeholder
+                GID number
+                List of members, seperated by commas(Be careful with spaces)
+                Seperated by colons
+
+        If a user defaults to a group in /etc/passwd but does not appear in the group
+        in /etc/group, /etc/passwd wins the argument
+
+        useradd/adduser add new users to their own personal group
+
+        groupadd, groupmod, groupdel
+
+8.6: Manual Setps for Adding Users
+        Editing the Passwd and Group Files
+                vipw
+                        Edit shadow/password files
+
+                        Invokes editor defined by EDITOR environment variable
+
+                        -s: edit shadowfile
+
+                vigr
+                        Edit /etc/group
+
+                        Same as above
+
+        Setting a password
+                sudo passwd {username}
+
+        Setting Home Directory Ownershp and Permissions
+                sudo chown -R {user}:{group} ~/{user}
+
+8.7: Scripts for Adding Users: useradd
+        useradd on Linux
+                Config paramters from
+                        /etc/login.defs
+                        /etc/default/useradd
+
+                login.defs
+                        Defines
+                                Password aging
+                                Encryption algorithms
+                                Ranges of UIDs/GIDs
+
+                /etc/default/useradd
+                        Include
+                                Default location of home directories
+
+                                Default shell for new users
+
+                        Can be changed with useradd -D
+
+                /etc/skel
+                        Skeleton rc files for shells
+
+                sudo useradd username
+                        Create user
+
+                        Disables by default, must set password to use
+
+                userdel - Delete user
+
+                usermod -L / usermod -u
+                        Lock/unlock user accounts
+

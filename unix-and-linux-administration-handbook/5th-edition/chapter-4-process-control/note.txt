@@ -1,0 +1,535 @@
+05/25/2023
+
+Process - a running program
+
+4.1: Components of a Process
+        Consists of
+                Address space
+                        Set of memory pages(4KiB or 8KiB)
+                                Contains code and libraries the process
+                                is executing, process variables, its stacks, etc
+
+                        Marked by kernel for processes use
+
+                Kernel data structures
+                        Contains info such as
+                                Process address space map
+
+                                Status of process
+                                        Sleeping, stopped, runnable, etc
+
+                                Execution priority
+
+                                Resources Process has used
+
+                                Files and network prots process has opened
+
+                                Signal mask
+
+                                Process Owner
+
+        PID: Process ID Number
+                Unique ID for a process
+
+                Commands/system calls require the PID to manipulate the process
+
+                Assigned in order as proccesses are created
+
+                Note: In Linux namespaces, a process can have a different
+                PID depending on the namespace
+
+        PPID: Parent PID
+                Unix/Linux has no system call to create a process
+
+                Creating a new process is cloning an existing process
+                and switching out what the process runs
+
+                PPID - the PID of the parent process from which it was cloned
+                        Useful for tracing origin of process
+
+        UID and EUID: Real and Effective User ID
+                UID - The user ID of the person who created it,
+                or in other words, a copy of the UID of the parent process
+
+                EUID - "effective" user ID
+                        Extra UID that determines what resources and files
+                        a process has permission to access at any given moment
+
+                        Usually same as UID
+                                setuid programs are an exception
+                Distinction between identity(UID) and permission(EUID)
+
+06/06/23
+
+4.2: The Life Cycle of a Process
+        fork
+                Creates a new process by copying an existing process
+
+                The new process will have a distinct PID from the original
+
+                Returns two different values
+                        For child returns 0
+
+                        For parent returns child PID
+
+                        Processes must look at return value to
+                        determine what to do
+
+        After fork, the child process calls the exec family of routines to
+        begin execution of a new program
+
+        Various forms of exec, only difference is how you specify
+        command line args
+
+        During system startup, processes are created. init/systemd is always PID 1
+                Any child processes that outlive their parents will be
+                reparented under PID 1
+
+        System startup scripts also creates processes All processes
+        are descended from this or are descended from init/systemd
+
+        Signals
+                Process level interrupt requests
+
+                Can
+                        Be sent among processes as a form of communication
+
+                        Be sent by an administrator(with kill) to achieve various ends
+
+                        Be sent by kernel to signify an error such as divide by zero
+
+                        Be sent by the kernel to notify a process of an "interesting"
+                        condition such as death of a child process
+
+                When a process recieves a signal it can
+                        Execute a custom handle routine for a particular signal
+
+                        If a handler for a signal doesn't exist, a default action
+                        is taken
+
+                Specifying a handler routine for a signal is referred to as
+                "catching the signal"
+
+                When a handler completes, execution restarts from the point
+                the signal was recieved
+
+                A process can ignore/block signals
+                        Ignored signals are discarded
+
+                        Blocked signasl are queued up but are not
+                        acted on until they ar eunblocked
+                                A handler for a blocked signal is
+                                only called once, even if multiple of
+                                the signal were blocked
+
+                Bus(Bus error) / SEGV(Segmentation Fault)
+                        Error signals, usually sent when a program crashes
+
+                        Default handlng is terminate with core dump
+
+                        Catching/blocking allowed
+
+                KILL
+                        Cannot be caught, blocked, or ignored
+
+                        Destroys recieving process
+
+                        Terminates process at kernel level
+
+                        Processes can't handle it
+
+                STOP
+                        Cannot be caught, blocked, or ignored
+
+                        Suspends process execution until
+                        CONT signal is recieved
+                                CONT can be caught or ignored but not blocked
+
+                TSTP(Keyboard Stop)
+                        "Soft" version of STOP
+
+                        Sent when <control-z> is typed on the keyboard
+
+                        Programs either usually
+                                Ignore this signal to prevent stopping from keyboard input
+
+                                Clean up process state and send themselves STOP to complete
+                                the operation
+
+                INT(Interrupt)
+                        Sent when pressing <control-c>
+
+                        Request to terminate current operation
+
+                        Simple programs shoudl quit(if caught) or allow
+                        themselves to be killed
+
+                        Programs that are interactive command lines(shell)
+                        should stop what they are doing, cleanup, and
+                        wait for user input again
+
+                TERM(Software Termination)
+                        Terminate execution completly
+
+                        Expected that the recieving
+                        process will clean up its state and exit
+
+                HUP(Hangup)
+                        Reset request by daemons
+                                Ex: Rereading a config file and adjusting
+                                to changes without restarting
+
+                        Also generated by terminal driver to clean up a process
+                        attached to a terminal
+                                From era of wired terminals and modem connections
+
+                QUIT
+                        Similar to TERM but produces a core dump if not caught
+
+                USR1 / USR2
+                        User defined
+
+                        Can be used by processes however they wish
+
+        kill: Send Signals
+                Can send any signal, defaults to TERM
+
+                kill {-signal} {PID} where signal
+                is the number or symoblic name of the signal to be sent
+                        kill -l
+                                List process signal name/number
+
+                Will not guaruntee the process wilil die by default since
+                TERM can be caught, blocked, or ignored
+                        Use kill -9 PID since KILL cannot be caught
+
+                        Only use this if a polite request fails
+
+                killall
+                        Kills processes by name
+
+                        Ex: sudo killall httpd
+
+                pkill
+                        Searches processes by attribute and sends the
+                        specified signal
+
+                        Ex: sudo pkill -u ben
+                                Sends a TERM signal running as the user ben
+
+4.3: PS: Monitor Processes
+        Used to monitor processes
+
+        Different versions due to development history of UNIX and vendor
+        customization. All can display the same info
+
+        Closely tied to kernels handling of processes
+
+        ps in Linux can understand multiple option sets from
+        multiple historical lineages
+
+        Accepts flags with/without dashes, but will behave differently
+        based on its presense/absense
+                ps -a and ps a are not the same command
+
+        ps aux
+                show an overview of all processes running on a system
+                        a - all
+                        x - processes that don't have a control terminal
+                        u - "user oriented" output format
+
+        ps lax
+                similar to aux but more technical
+                l - "long" output format
+
+        In ps output any command names in brackets are kernel threads scheduled
+        as processes
+
+        pidof
+                Find PID of process
+
+        pgrep
+                Can also be used to find PID of process
+
+                More flexible than pidof
+
+                Similar filtering capabilities to pkill
+
+4.4: Interactive Monitoring with TOP
+
+        ps shows a snapshot of the system as it was at the time
+
+        top - real time version of ps
+
+        Gives a reguraly updated interactive summary of processes
+        and their resource usuage
+
+        By default, updates every 1-2 seconds
+
+        CPU intensive applications appear at top
+
+        Accepts input to send signal and renice processes
+
+        Summary info of system at top of display
+
+        CPU usage is average of all cores on system
+                Press 1 when top is open to switch to individual cores
+
+4.5: Nice and Renice: Influence Scheduling Priority
+        "Niceness" of a process is a numeric hint to the kernel about how the process
+        should be treated in relation to other processes contending for the PCU
+
+        "determines how nice you are going to be to other users of the system"
+
+        High niceness = low process priority
+        Low/negative niceness = high process priority
+
+        Unusal to set by hand anymore
+
+        Range
+                Linux: -20 to +19
+                FreeBSD: -20 to +20
+
+        By default, a process inherits the niceness of its parent
+        process
+
+        Owner of process can increase niceness but nto lower it
+                Prevents processes with low priority from having high priority children
+
+        nice
+                assign process niceness at creation
+
+        renice
+                readjust a running processes niceness
+
+        Always type full pathname to nice and renice
+        as some shells have the commands built into them
+
+06/07/23
+
+4.6: The /proc Filesystem
+        ps and top read process status from /proc
+
+        A psuedo fileystem in which the kernel exposes
+        info about the systems state
+
+        Some obscure stats can only be found here
+
+        See man proc for more info
+
+        Files in proc are created on the fly
+
+        Files may appear to be empty but can be
+        read with cat or less
+
+        Process specific information is divided into subdirs
+        named by PID
+                Ex: /proc/1 for into about init/systemd
+
+        Process information files in Linux /proc
+                cgroup
+                        Control groups process belongs to
+
+                cmd
+                        Command or program process is executing
+
+                cmdline
+                        Complete command line of process(null-seperated)
+
+                cwd
+                        Symbolic link to process current directory
+
+                envrion
+                        Process environment variables(null-seperated)
+
+                exe
+                        Symbolic link to file being executed
+
+                fd
+                        Subdirectory containing links for each open
+                        file descriptor
+
+                fdinfo
+                        Subdirectory containing fuerther info for each
+                        open file descriptor
+
+                maps
+                        Memory mapping info(shared segments, libs, etc)
+
+                ns
+                        Subdirs with each namespace used
+
+                root
+                        Symbolic link to process root dir
+
+                stat
+                        General process status info
+
+                statm
+                        Memory usuage info
+
+4.7: Strace and Truss: Trace Signals and System Calls
+        strace(Linux) / truss(FreeBSD)
+                Displays every system call a process makes and every signal it recieves
+
+                Can attach/detach from a process without hurting it
+
+                Shows system call args and result codes
+
+                Good for debugging not reported in process itself
+
+4.8: Runaway Procesess
+        Processes that use significantly more of the systems CPU, disk
+        or network resources than usual
+
+4.9: Periodic Processes
+        Processes that run without human interaction
+                Ex: scheduled backups, nightly batch jobs
+
+        cron: Schedule Commands
+                cron daemon
+                        Traditional tool for running commands
+                        on a predetermined schedule
+
+                        Starts when system boots and runs as long
+                        as system is up
+
+                        Multiple implementations, but syntax and functionality
+                        is nearly identical
+
+                Reads config files containing list of command lines and
+                times they should be invoked
+
+                Executed by sh, so anything from the shell can be used
+
+                Can be configured to use different shells
+
+                A cron configuration file is called "crontab", short for "cron table"
+
+                Crontabs for users stored at
+                        Linux
+                                /var/spool/cron
+                        FreeBSD
+                                /var/cron/tabs
+                One crontab file per user
+                        Named with login name of user
+
+                crontab
+                        Transfers crontabs to/from directory
+
+                        Notifies cron that crontab file has changed
+
+                Log file at /var/log/cron
+
+                crontab format
+                        Comment line - #
+
+                        Each line is the following format and represents one command
+                                minute hour dom month weekday command
+
+                                First five fields tell cron when to run command
+
+                        Time Specs
+                                minute of hour(0-59)
+                                hour of day(0-23)
+                                day of the month(1-31)
+                                month of the year(1-12)
+                                weekday(0-6, 0 = Sunday)
+
+                                Each time field can contain
+                                        A star, matches everything
+
+                                        A single integer, which matches exactly
+
+                                        Two ints seperated by dash, matches range of values
+
+                                        A range followed by a slash and a step value
+                                                1-10/2
+
+                                        A comma seperated list of integers of ranges,
+                                        matching any value
+
+                                Examples
+                                        45 10 * * 1-5
+                                                10:45am, Monday through Friday
+                                        0,3,6,9,12,15,18
+                                                Same as 0-18/3
+                                        0,30 * 13 * 5
+                                                Every half hour on Friday and every half
+                                                hour on the 13th of the month
+
+                                                Not every half hour on Friday the 13th
+
+                                                If both dom/weekday are specified only
+                                                only one needs to be satisfied to execute 
+
+                        Command is the sh command to be executed
+                                Any valid shell command
+
+                                Should not be quoted
+
+                                Considered to continue to end of line and can contain blanks
+                                or tabs
+
+                                Percent signs(%) indicate newlilnes in command field
+                                        Only text up to first one included in actual command
+
+                                        Rest of the lines are viedn to the command as standard input
+
+                                        Use backslash if you need to include % in a command
+
+                                Fully qualified pathname is encouraged so it works even when
+                                command isn't in path
+
+                        An entry in a crontab is known as a "cron job"
+
+                        One minute is the finest granualarity available to cron jobs
+
+                        If a cronjob envokes a script make sure it is executable
+
+                        crontab management
+                                crontable filename
+                                        Installs filename as crontab, replacing any
+                                        previous version
+
+                                crontab -e
+                                        Checks out crontab file, envokes editor(EDITOR env var),
+                                        and then resubmits it to the crontab directory
+
+                                crontab -l
+                                        List contents on crontab
+
+                                crontab -r
+                                        Remove crontab
+
+                                Root can supply usernames to crontab -r and crontab -e
+
+                        Other crontabs
+                                System level crontabs
+                                        found in /etc/crontab and /etc/crontab.d
+
+                                Slightly different syntax, has username field
+                                Allows cronjob to run as an arbirary user
+
+                                Other cron directorys
+                                        /etc/cron.hourly
+                                        /etc/cron.daily
+                                        /etc/cron.weekly
+
+                                        Any scripts in these run based on folder name
+
+                        cron Access Control
+                                /etc/cron.allow
+                                        List of users that can submit crontabs
+
+                                        One user per line
+
+                                        Unlisted users can run crontab
+
+                                /etc/cron.deny
+                                        List of users that can't submit crontabs
+
+                                        Same format as allow
+
+                                If neither files exist, most systems default to allowing
+                                everyone to run crontab

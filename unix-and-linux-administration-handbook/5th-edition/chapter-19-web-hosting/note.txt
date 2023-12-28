@@ -1,0 +1,289 @@
+09/07/2023
+
+19.1: HTTP: The Hypertext Transfer Protocol
+        Core network protocol for communication on the web
+
+        Client / server, one request / response protocol
+
+        Clients /user agents submit requests for resources
+        to an HTTP server
+
+
+        Page views on the web entails hundreds of requests
+
+        HTTP 1.0 / 1.1
+                Sent over network in plain text
+
+                Servers can be interacted with using
+                telnet or netcat
+
+                Exchanges can be collected using tcpdump
+
+        HTTP/2
+                Newest version
+
+                Backwards compatible but has performance improvements
+
+                Browsers only support it over TLC encrypted connections(HTTPS)
+
+                Binary format
+
+                Supported by curl
+
+        Uniform Resource Locators(URLs)
+                Identifer that sepcifies how and where to
+                access a resource
+
+                Not HTTP specific
+
+                Format scheme: address
+                        Scheme - protocol or system being targeted
+                                Important schemes for the web
+                                        HTTP
+                                        HTTPS
+
+                        Address - Some string thats meaingful within
+                        the scheme
+
+                Web URL format
+                        scheme://[username:password@]hostname[:port][PQuery][#anchor]
+
+                        Only scheme and hostname are required
+
+                        Hostname - domain name / IP address / hostname
+
+                        Default ports
+                                HTTP - 80
+                                HTTPS - 443
+
+        Structure of an HTTP Transaction
+                HTTP response / request have a similar structure
+                        Initial line
+
+                        Sequence of headers
+
+                        Blank line
+
+                        Body of message (paylaod)
+
+                HTTP Requests
+                        First line - action for server to perform
+                                Request method (verb), path to
+                                peform the action, and the HTTP version
+
+                                Ex: GET /index.html HTTP/1.1
+
+                        Request Methods
+                                GET - retrieves specified resources
+
+                                HEAD - Like GET, but requests no payload; metadata only
+
+                                DELETE - Deletes specified resource
+
+                                POST - Applies request data to the given resource
+
+                                PUT - Similar to POST, but implies replacement of existing
+                                contents
+
+                                OPTIONS - Shows what methods the server supports for the
+                                specified path
+
+                HTTP Response
+                        First line - status of request
+                                Ex: HTTP/1.1 200 OK
+
+                                Three digit status code
+                                        First digit determines
+                                        general nature of result
+
+                        HTTP Response Classes
+                                1xx - request recieved; processing continues
+
+                                2xx - Success
+
+                                3xx - Futher action needed
+
+                                4xx - Unsatisfiable request
+
+                                5xx - Server or environment failure
+
+                Headers and the Message Body
+                        Headers - Specify metadata bout a request or response
+                                Only Host header is required for request
+                                        Specifies which site to contact
+
+                                Seperated from messaage body by blank line
+
+                        Message Body
+                                Requests
+                                        Parameters (POST / PUT)
+
+                                        Contents of file to upload
+
+                                Responses
+                                        Payload of the resource being requested
+
+                                Not always human readable (Images)
+
+                                Can be empty such as in GET requests or error
+                                responses
+
+        TCP Connection Reuse
+                Making TCP connections are expensive
+
+                Connection: Keep-Alive header
+                        HTTP servers / clients send
+                        multiple requests over a single
+                        TCP connection
+
+                        Saves time from creating connection
+                        for each request
+
+                HTTP/2
+                        Allows multiplexing
+                                Interleaving of several transactions on
+                                a single connection
+
+        HTTP Over TLS
+                HTTP provided no network security. Everything is open to
+                view / modify during client / server transaction
+
+                Transport Layer Security (TLS)
+                        Runs between TCp and HTTP
+
+                        Supplies only security / encryption
+
+                        User agent identifies server identity,
+                        eliminating server spoofing
+
+                        Request contents are protected against viewing
+                        or modifying. Only thing seen is host and port
+
+19.2: Web Software Basics
+        Parital list of HTTP Server Types
+                Application Server
+                        Purpose: Runs web app code, interfaces to web servers
+                        Examples: Unicorn / Tomcat
+
+                Cache
+                        Purpose: Speeds access to frequently requested content
+                        Examples: Varnish, Squid
+
+                Load Balancer
+                        Purpose: Relays requests to downstream systems
+                        Examples: Pound, HAProxy
+
+                Web App Firewall
+                        Purpose: Insepects HTTP traffic for common attacks
+                        Examples: ModSecurity
+
+                Web Server
+                        Purpose: Serves static content, couples to other
+                        servers
+
+                        Examples: Apache, NGINX
+
+        Web Proxy
+                Intermediary that recieves HTTP requests from cleints, optionally
+                performs some processing. and relays the requests to their
+                ultimate destination
+
+                Ex: Load balancers, web app firewalls, cache servers
+
+09/08/2023
+
+        Web Servers and HTTP Proxy Software
+                Used to proxy HTTP connections to application servers or
+                serve static content directly
+
+                Features
+                        Virtual Hosts
+                        Handle TLS Connections
+                        Configurable Logging
+
+                Ex:
+                        Apache HTTP Server (httpd)
+                        NGINX
+                        H20 Server
+                                HTTP/2 features
+
+        Load Balancers
+                Proxy server that distributes requests to a set of downstream
+                web servers
+
+                Monitor servers to ensure that the are providing timely / correct
+                responses
+
+                Only routes requests
+
+                Easily remove server from pool if it needs maintenance
+
+                Servers that causes issues are automatically removed unitl they
+                become healthy again
+
+                Can distribute other traffic besides HTTP
+
+                Ex:
+                        NGINX
+                        HAProxy
+                        Elastic Load Balancer(ELB)
+                                AWS
+
+        Caches
+                Store most frequent requests
+
+                Return requests so call to web server isn't needed
+
+                Origin - orignal content provider, source of truth
+                about content
+
+                Get content directly from orign or an upstream cache
+
+                Static files are great to cache
+                        Ex: Images, videos, etc
+
+                Browser cache
+                        Save recently used resources to speed up return visits
+                                Ex: iamges, style sheets, js, html
+
+                Proxy Cache
+                        At edge of org network
+
+                        Used to cache requests
+
+                Reverse Proxy Cache
+                        Offloads traffic from web / application servers
+
+                        Caches web / app server requests
+
+                Problems
+                        STALE CACHE DATA
+                        REALLY HARD TO DEBUG
+
+                Ex:
+                        Squid
+                        Varnish
+                        Apache mod_cache
+                        NGINX
+                        Apache Traffic Server
+
+        Content Delivery Networks (CDNs)
+                Globably distributed system that improves
+                performance by moving content closer to the
+                user
+
+                Nodes are dispersed geographically to numerous
+                locations
+
+                Client requests are routed to closet node via
+                DNS
+
+                Traditionally used for static content
+
+                Provide denial-of service prevention and
+                web application firewalls
+
+                Ex:
+                        Akamai
+                        CloudFlare
+                        CloudFront (Amazon)
