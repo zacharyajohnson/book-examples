@@ -1,0 +1,541 @@
+09/03/2023
+
+User level programs like to refer to resources by name
+        Ex: www.google.com
+
+Low level networking only understands IP addresses
+        Ex: 192.22.0.1
+
+DNS
+        Provides mappings between names and IP
+        addresses
+
+        Have other features but exist to support mapping
+
+16.1: DNS Architecture
+        Distribute database
+                One site stores data for computers it knows about
+
+                Sites cooperate with each other when one site needs
+                to look up the others data
+
+        Queries and Responses
+                DNS query
+                        Consists of
+                                Name
+                                Record type
+                        
+                        Answer returned is a set of "response records"
+                        that are response to query OR a response indicating
+                        that it does not exist
+
+                        Servers that don't know the answer to a query return
+                        resource records that hlep locate a server that does
+
+                Record - Query for names IP address
+
+        DNS Service Providers
+                Today if an org maintains a DNS server, it is for internal use only
+
+                External facing DNS servers are typically provided by 3rd parties
+                        Amazon Route53
+                        CloudFlare
+                        GoDaddy
+                        DNS Made Easy
+                        Rackspace
+
+                75% of DNS Servers run some form of the Berkely Internet Name Domain(BIND)
+                DNS Service System
+
+16.2: DNS For Lookups
+        Want clients to lookup names in DNS
+
+        Two steps
+                Configure systems as DNS clients
+
+                Tell when to use DNS vs other systems such
+                as /etc/hosts
+
+        resolv.conf: Client Resolver Configuration
+                Configure client side DNS resolver in
+                /etc/resolv.conf
+
+                Lists the name servers to which the host
+                can send queries
+
+                If host gets IP / network params from DHCP, this
+                is usually generated automatically
+
+                Format
+                        search domainname ...
+                        nameserver ipaddress
+
+                Up to 3 name servers can be listed
+
+                Ex:
+                        search atrust.com booklab.atrust.com
+                        nameserver 63.173.189.1
+                        nameserver 174.129.219.255
+
+                        Search line lists the domain to query if a hostname is not
+                        fully qualified
+                                SSH coraline will look for coraline.atrust.com 
+                                or coraline.booklab.atrust.com
+
+                                Allows 6-8 domains listed. 
+
+                                Character limit of 256
+
+                        DNS servers are contacted in order
+
+        nsswitch.conf: Who Do I Ask for a Name?
+                Specifies how host hame to IP address mappings should be
+                performed and whether DNS should be tried first, last,
+                or not at ll
+
+                No best way to configure, depends on use case
+
+16.3: The DNS Namespace
+        Organized into a tree taht contains both forward mappings and
+        reverse mappings
+
+        Forward mappings - Map hostnames to IPs
+        Reverse mappings - Map IPs to hostnames
+
+        Every complete hostname is a node in the forward
+        branch of the tree
+
+        Two types of top-level domains
+                Country Code Domains(CCTLDs)
+                Top-Level Domains(gTLDs)
+
+        Registering a Domain Name
+                Can obtain a second level domain name individually
+                        Ex: blazedgoat.com
+
+                Identify two hosts that will be name servers for domain
+
+16.4: How DNS Works
+        Name Servers
+                Answers queries about your sites hostname and IP addresses
+
+                Asks about both local and remote hosts on behalf of your users
+
+                Caches answers to queries for faster response time
+
+                Communicates with other local name servers to keep DNS data
+                syncronized
+
+                Deal with "zones"
+                        Domain minus subdomains
+                        "Domain is typically used to mean zones
+
+                Operates in serveral modes
+
+                A single server can play differnt roles with respect to
+                different zones
+
+                Name Server Taxnonmy
+                        Authoritative - Offically represents a zone
+
+                        Master - Master server for a zone, gets data from disk file
+
+                        Primary - Another name for master server
+
+                        Slave - Copies its data from master
+
+                        Secondary - Another name for slave server
+
+                        Stub - Like a slave, but only coopies server data (not host data)
+
+                        Distributed - A server advertised only within a domain("Stealth Server")
+
+                        Nonauthorative Caching - Answers query from cache; doesn't know if valid
+                        Caches data form pervious queries, usually has no local zones
+
+                        Forwarder - Performs queries on behalf of many clients; builds large cache
+
+                        Recursive - Queries on your behalf until it returns either an answer on an
+                        error
+
+                        Nonrecursive - Refers you to another server if it can't answer a query
+
+        Authorative and Caching-Only Servers
+                Master, slave, and caching servers are distinguished by two things
+                        Where the data comes from
+
+                        Whether the server is authroitative for the domain
+
+                Each zone has one master server
+                        Keeps data on disk
+
+                        Offical copy of data
+
+                Slave server
+                        Gets data from master server through a "zone transfer"
+                        operation
+
+                        Zones can have many but at least must have one
+
+                Caching server
+                        Loads servers for root domain and caches query results
+
+                An authoritative answer from a name server is guarunteed to be correct
+
+        Recursive and Nonrecursive Servers
+                Nonrecursive
+                        Either returns an asnwer or refers to another server that
+                        might know the answer
+
+                        All Authoritative-only servers (root servers, top level domain servers)
+                        are this since they process so many records
+
+                Recursive
+                        Only returns answers / errors
+
+                        Will follow refferals to get an answer
+
+                        Resolver libraries don't understand refferals
+                        Any servers in resolv.conf MUST BE RECURSIVE
+
+        Resource Records
+                Contains info about hosts
+
+                Single line consisting of a name, record, type,
+                and some data values
+
+                Name filed can be omitted if its the same as the previous line
+
+                Ex:
+                        "Forward" file called atrust.com
+                        nubark IN A 63.173.189.1
+                               IN MX 10 malserver.atrust.com
+
+                        "Reverse" file called 63.173.189.rev
+                                1 IN PTR nubark.atrust.com
+
+                        Associates nubark.atrust.com with IP 63.173.189.1
+
+
+                Flow around DNS system and become cached at various locations
+
+        Delegation
+                All name servers read the identities of the root servers from
+                        A local config
+
+                        Build into code itself
+
+                Root servers
+                        Know about namer servers for com, net, edu, etc
+
+                edu servers
+                        Known about colorado.edu, berkely.edu, etc
+
+                Each domain can delegate authority for its subdomains to other servers
+
+        Debugging With Query Tools
+                BIND commands to query DNS database
+                        nslookup
+                        dig
+                        host
+                        drill
+                        delv
+
+16.5: The DNS Database
+        A set of text files (zone files) maintained by the
+        sysadmin on the zone's master name server
+
+        Two entries
+                Parser commands
+                Resources records
+
+        Parser Commands in Zone Files
+                Embedded in zone files to make it easier
+                to maintain / readable
+
+                Can
+                        Influence how parser interprets later records
+
+                        Expand to multiple DNS records
+
+                Ex:
+                        $ORIGIN
+                        $INCLUDE
+                        $TTL
+                        $GENERATE(BIND only)
+
+                Must start in colum one and occur on a line by themselves
+
+                $ORIGIN
+                        Set / change default origin
+
+                        Ex: $ORIGIN {domain-name}
+
+                $INCLUDE
+                        Include file into zone file
+
+                        Origin - acts if $origin was used in last line
+                                Careful doesn't reset after include
+
+                        Ex: $Include {filename} [origin]
+                $TTL
+                        Sets default value for time-live for records that follow it
+
+                        Ex: $TTL 24h or $TTL 1d or $TTL 86400
+
+        Resource Records
+                Format - [name] [ttl] [class] type data
+
+                Fields are seperated by whitespace (tabs or spaces)
+
+                Special characters
+                        ; - Introduces comment
+                        @ - Current zone name
+                        () - ALlows data to span lines
+                        # - Wild card (Name field only)
+
+                Fields
+                        Name
+                                Identifies entity (host or domain)
+
+                                Can be omitted if lines refer to same entity
+
+                                Column 1
+
+                                Relative or absolute
+
+                        TTL (Time to live)
+
+                                Specifies length of time, in seconds, that
+                                the record can be cached and still be considered
+                                valid
+
+                        Class
+                                Specify network type
+
+                                IN(Internet) is default
+
+                        4 Main types
+                                Zone Infrastructure Records
+                                        Identify domains and their name servers
+
+                                        SOA (State of authority)
+                                                Defines a DNS zone
+
+                                        NS(Name Server)
+                                                Identifies Servers, delegates, subdomains
+
+                                Basic Records
+                                        Map between names and addresses and rotate mail
+
+                                        A (IPV4 Address) - Name to address translation
+
+                                        AAAA (IPV6 Address) - Name to IPV6 address translation
+
+                                        PTR (Pointer) - Address to name translation
+
+                                        MX (Mail Exchanger) - Controls email routing
+
+                                Security Records
+                                        Add authentication and signatures to zone files
+
+                                        DS (Delegation Signer) - Hash of signed child zones key-signing key
+
+                                        D NSKEY (Public Key) - Public key for a DNS name
+
+                                        NSEC (Next Secure) - Used with DNSSEC for negative answers
+
+                                        RRSIG (Signature) - Signed, authenicated resource record sent
+
+                                Optional Records
+                                        Provide extra info about hosts or domains
+
+                                        CName (Canonical Name) - Nicknames or aliases for a host
+
+                                        SRV (Service) - Give locations for a well known service
+
+                                        TXT (Text) - Comments or untyped info
+
+                                Order of records is arbritrary. Tradition is:
+                                        SOA records
+
+                                        NS records
+
+                                        Records for each host should be kept together
+
+                                        Sorted by name field
+
+09/04/2023
+
+16.6: The BIND Software
+        Berkely Internet Name Domain System
+
+        Open source, implements DNS for Linux, UNIX, macOS, and Windows
+
+        Components of BIND
+                Four
+                        Named - name server daemon that snwers queries
+
+                        Resolver library that queries DNS servers on behalf of user
+
+                        Command-line interfaces to DNS
+                                nslookup
+                                dig
+                                host
+
+                        rndc - A program to remotely control named
+
+        Configuration Files
+                Zone data files - address mappings for each host
+
+                Root name server hints file
+
+                named.conf
+                        Config file for named
+
+                        Has its own format compared to DNS data records
+
+                        Specifies roles for host, master, slave, etc
+
+                        Specifies manner host should obtain its copy of the data
+                        for each zone it serves
+
+                        Very fragile syntax
+
+                        Series of statements
+
+        The Include Statement
+                Used to bring a file into another config file
+
+                Ex: include {path}
+                        If relative, interpreted with the directory option
+
+        The Options Statement
+                Specifies global options
+
+                May be overriden later for particular zones or servers
+
+                Ex:
+                        options {
+                                option;
+                                option;
+                        }
+
+                If no options statement is present, default values are used
+
+                Over 170 options in BIND
+
+        The ACL Statement
+                Access Control List
+
+                Is address match list with a name
+
+                Ex:
+                        acl acl-name {
+                                address-match-list
+                        }
+
+                Use it anywhere an address match list is used
+
+                Must be top level statement
+
+                Must be defined before they are used in named.conf
+
+                Four predefined lists
+                        any - all hosts
+
+                        localnets - all hosts on local networks
+
+                        localhost - the machine itself
+
+                        none - nothing
+
+09/05/2023
+
+        The (TSIG) Key Statement
+                Defines a "shared secret" (password) that authenticates
+                between two servers
+
+                Ex: 
+                        key key-id {
+                                algorithm string;
+                                secret string;
+                        }
+
+                Associate key with a server, include key-id in servers
+                server statement
+
+                Shared secret is confidential and should not be kept in a
+                world-readable file
+
+        The Server Statement
+                Tells named about the characteristics of servers it talks to
+
+                Can override defaults for a server
+
+                Not required unless you want to configure keys for zone transfer
+
+                Ex:
+                        server ip_addr {
+                                bogus yes | no; [no]
+                                provide-ixfr yes | no; [yes]
+                                request-ixfr yes | no; [yes]
+                                keys { key-id; key-id; ... } [none]
+                                transfer-source ip-address [port];
+                                                           [closest interface]
+                                transfer-source-v6 ip-address [port];
+                                                              [closest interface]
+                        };
+
+        The Masters Statement
+                Names a set of one or more master servers by specifying their
+                IP addresses and cryptographic keys
+
+                Name can be used instead of IP / key in masters clause of zone
+                statements
+
+        The Logging Statement
+                Most configurable logging system on Earth
+
+        The Statistics-Channel Statement
+                Allows connection a running namwed with a browser to
+                view statistics
+
+                Ex:
+                        statistics-channel {
+                                inet (ip-addr 1 *) port port# allow
+                                { address-match-list };
+                        }
+
+        The Zone Statement
+                Tell named about the zones that its in charge of and
+                set options to manage them
+
+                Used by caching servers to preload root server hints
+
+                Format depnds on role for a particular zone
+
+                Configuring a master server for a zone
+                        zone {domain-name} {
+                                type master;
+                                file {path}
+                        }
+
+                        Where path is the file path to a zone file
+
+                Configuring a slave server for a zone
+                        zone {domain-name} {
+                                type slave;
+                                file {path};
+                                masters { ip-addr [port] [key]; };
+                                allow-query { address-match-list };
+                        };
+
+09/07/2023
+
+16.9: Zone File Updating
+        Update zone data files on master server, must update
+        serial number in zones SOA record
+
+        Propegate changes
+                BIND - rndc reload
