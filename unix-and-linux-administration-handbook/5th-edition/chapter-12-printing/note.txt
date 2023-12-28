@@ -1,0 +1,25 @@
+08/17/2023
+
+CUPS
+        Printing system used by Linux / FreeBSD
+
+        Network / security aware
+
+        Has GUI / shell scripts to control it
+
+Printing relies on
+        A print "spooler" that collects / schedules jobs
+
+        User level utilities that talk to the spooler
+                Send jobs to spooler
+
+                Query system about jobs
+
+                Remove / reschedule jobs
+
+                Configure other parts of the system
+
+        Back ends that talk to printer hardware
+
+        A network protocol that lets spoolers communicate
+        and transfer jobs
