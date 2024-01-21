@@ -1,0 +1,465 @@
+01/03/2024
+
+Functions break large tasks into smaller ones,
+and enable people to build on what others have done
+instead of starting over from scratch.
+
+Good functions hide details of operation from parts
+of the program that don't need to know about them.
+
+4.1: Basics of Functions
+        Ex: grep - Print each line of input that contains
+        a particular "pattern" or string of characters
+
+        See example/grep.c
+
+        Each function definition has the form
+                return-type function-name(argument declarations)
+                {
+                        declarations and statements
+                }
+
+        Various parts can be absent
+        
+        Ex: dummy() {} - function that does nothing and returns nothing
+
+        If the return type is ommited, int is assumedo
+
+        Communication between functions is by arguments and values returned by the
+        functions, and external variables
+
+        Functions can occur in any order in the source file, and
+        the source program can be split into multiple files, so long
+        as no function is split
+
+        The return statement is used for returning a value from the called
+        function to its caller. Any expression can follow return:
+
+                return expression;
+
+        The expression will be converted to the return type of the function if
+        necessary.
+
+        The calling function is free to ignore the returned value
+
+        If no value is after return, no value will be returned
+        from the function
+
+        Control also returns to the caller with no value execution
+        "falls off the end" of the function by reaching
+        the closing right brace
+
+        If a function is expected to return a value and it doesn't
+        the value will be garbage
+
+4.2: Functions Returning Non-Integers
+        Functions can return different types of values besides
+        int and void
+
+        Ex: atof - Convert strings to double, handles optional sign and decimal point
+        
+        See example/atof.c
+
+        atof must decalare the type of value it returns, since it is not int
+        The type preceedes the function name
+
+        The calling routine must know that atof returns a non-int value.
+        You can ensure this be declaring atof explicitly in the calling routine
+
+        Ex:
+                main()
+                {
+                        double sum, atof(char []);
+                }
+
+        The declaration says that sum is a double variable and that
+        atof is a function that takes one char[] argument and returns
+        a double
+
+        The function atof must be declared and defined consistently.
+        If atof itself and the call to it in main have inconsistent types in the same
+        source file, the error will be detected by the compiler. However, if atof
+        was compiled seperately, the mismatch would not be detected, atof would return
+        a double that main would treat as an int, and meaningless answers would result
+
+        The reason a mismatch can happen is that if there is no function prototype,
+        a function is implicitly declared by its first
+        apperance in an expression such as
+
+                sum += atof(line)
+
+        If a name that has not been previously declared occurs in an expression and is followed
+        by a left parenthesis, it is declared by context to be a function name, the function is
+        assumed to return an int, and nothing is assumed about its argument
+
+        If a function does not include arguments such as
+
+                double atof();
+
+        nothing is assumed about arguments of atof, all checking is turned off. This is
+        so older C programs can compile with new compilers. if a function takes no arguments
+        use void in the arguments list
+
+4.3: External Variables
+
+        A C program consists of a set of external objects, which are either
+        variables or functions
+
+        "external" is used in contrast to "interal", which describes the
+        arguments and variables defined inside functions
+
+        External variables are defined outside of any function, and are potentially
+        aviable to many functions.
+
+        Functions are always external, since you can't define functions inside
+        functions
+
+        By default, external variables and functions have the property that
+        all references to them by the same name, even from functions
+        compiled separately, are references to the same thing.(External linkage)
+
+        Any function may access an external varialbe by referring to it by name, if
+        they name has been declared somehow.
+
+        If a large number of variables must be shared among functions, external variables
+        are more convenient and efficient than long argument lists. However, you should consider the 
+        impact on program structure before doing this.
+
+        External variables are permanent as long as the program runs and retain values between
+        function calls
+
+        If two functions must share some data, yet neighter calls the other, it
+        is convenient if the shared data is kept in external variables rather than
+        passed in and out via arguments
+
+        Ex: Calculator - supports +, -, *, and /
+                Will use reverse Polish notation
+                        1 2 - 4 5 + * vs (1 - 2) * (4 + 5)
+
+                        Parentheses are not needed; the notation is
+                        unambiguous as long as we know how many operands
+                        each operator expects
+        
+                        Each operand is pushed onto a stack; when
+                        an operator arrives, the proper number of operands
+                        (two for binary operators) is popped, the operator is
+                        applied to them, and the result is pushed back onto the
+                        stack.
+
+                        Program structure:
+                                while (next operator or operand is not end-of-file)
+                                        if (number)
+                                                push it
+                                        else if (operator)
+                                                pop operands
+                                                do operation
+                                                push result
+                                        else if (newline)
+                                                pop and print top of stack
+                                        else
+                                                error
+
+                        The stack will be stored outside of the main function but
+                        still be accessible to the push and pop methods
+
+        See example/calculator.c
+
+01/05/2024
+
+        Because + and * are commutative operators, the order in which the popped operands
+        are combined is irrelevant, but for - and / the left and right operands must be
+        distinguished
+
+        Ex: push(pop() - pop()) - order pop calls are evaluated is not defined.
+        That is way we pop the first operator into a temp variable
+
+        getop - function that fetches next operator or operand
+                Skip blanks and tabs. If the next character is not
+                a digit or a decimal point, return it. Otherwise, collect
+                a string of digits (which might include a decimal point) and
+                return NUMBER, the signal that a number has been collected
+
+        getch/ungetch - retreives input from buffer or input / push input
+        into a buffer. The reason for this is in getop we process digits
+        until the first non char is found. This poses a problem because
+        we don't know the entire digit until we find the first non digit
+        char. However, we want to read the nondigit char in the next pass through.
+        So, we use ungetch to push the non digit char to the buffer and getch
+        will read it from the buffer first, then get the rest of input
+        from getchar()
+
+        The standard library for C has the ungetc function that does the
+        same as ungetch(Pushes character back to input). Will be discussed
+        in chapter 7
+
+01/06/2024
+
+4.4: Scope Rules
+        The functions and external variables that make up a C program need not
+        all be compiled at the same time; the source text of the program may be kept in
+        several files, and previously compiled rountines may be loaded from libraries.
+
+        Questions
+                How are declarations written so that variables are properly declared during compilation?
+
+                How are declarations arranged so that all the pieces will be properly connected when
+                the program is loaded?
+
+                How are declarations organized so there is only one copy?
+
+                How are external variables initialized?
+
+       Scope - part of the program within which the name can be used.
+                Autonamic(local) variables - the function its declared.
+                        Local variables in different functions are unrelated
+                        Same thing with parameters
+                
+                External variable / function - lasts from the point at which it is
+                declared to the end of the file being compiled
+
+        If an external variable is to be referred to before it is defined,
+        or if it is defined in a different source file from the one where it
+        is being used, then an extern declaration is mandartory.
+
+        Definition - Announces the properties of a varialbe and ALSO causes storage to be set aside
+                Ex: int sp;
+                    double val[MAXVAL];
+
+        If definitions appear outside a function, they cause storage to be set aside, and
+        also serve as the declaration for the rest of the source file
+
+        Declaration - Declares properties for variables but does not create them or reserve storage for them
+                Ex: extern int sp;
+                    extern double val[];
+
+        There can only be one definition of an external variable among all the files that make up the source
+        program; other files may contain extern declarations to access it
+                There may also be extern declarations in the file containing the definition
+        
+        Array sizes must be specified with the definition, but are optional with an extern declaration
+
+        Initialization of an external variable goes only with the definition
+
+4.5: Header Files
+        Used to split up program into smaller files and to share definitions / declarations between
+        files
+
+        .h prefix
+
+4.6: Static Variables
+        When used on an external variable or function, limitis the scope of that
+        object to the rest of the source file being compiled
+                Provide a way to hide implementation details
+
+        Variables are prefixed with static keyword
+
+        Static external variables will not conflict with variables with
+        the same names in other files since they are private
+
+        When used on functions it prevents them from being used in which it
+        is declared.
+
+        When used with autonamic(local / internal) variables they provide consistent
+        storage of values between function calls instead of going away at the
+        end of the function call.
+
+4.7: Register Variables
+        Register declaration advises the compiler that the variable in question will
+        be heavily used.
+
+        Will try to place them in machine registers, which may result in smaller
+        and faster programs. Compilers are free to ignore this however
+
+        Variables are prefixed with register
+
+        Can only be applied to automatic variables and to parameters of a function.
+
+        Only a few variables in each function can be kept in registers.
+        
+        Only certain types can use registers
+
+        Excess register declarations will be ignored for excess or disallowed declarations
+
+        Not possible to take the address of a register variable, regardless of whether the variable is
+        actually placed in a register
+
+        The specific restrictions on number and types of register variables vary from machine to machine
+
+4.9: Initialization
+        In the absence of explicit initialization, external and static variables are guaranteed to
+        be initialized to zero.
+
+        Automatic and and register variables have undefiend(i.e., garbage) initial values
+
+        Scalar variables may be initialized when they are defined, by following the name with an
+        equals sign and an expression
+
+        Ex:
+                int x = 1;
+                char squote = '\'';
+                long day = 1000L * 60L * 60L * 24L; /* milliseconds/day */
+
+        For external and static variables, the initializer must be a constant expression.
+        This is because conceptually the variables are initalized before program execution
+
+        For automatic and register variables, the initializer is not restriced to being a constant,
+        it may be an expression involving previously defined values, even function calls
+
+        Initialization of automatic variables are just shorthand for assignment statements.
+        Which form to prefer is a matter of taste.
+
+        An array may be initialized by following its declaration with a list of initializers
+        enclosed in braches and seperated by commas
+
+        Ex:
+                int days[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
+
+        When the size of the array is omitted, the compiler will compute the length by counting
+        the initializers.
+
+        If there are fewer initializers for an array than the number specified, the
+        missing elements will be zero for external, static, and automatic variables
+
+        Char arrays may be initalized by doing one the following
+        Both ways are equivalent
+
+        Ex:
+                char pattern[] = "ould";
+                char pattern[] = { 'o', 'u' , 'l', 'd', '\0' };
+
+4.10: Recursion
+        Recursion - a function may call itself either directly
+        or indirectly.
+
+        Ex: printd - print n in decimal
+
+        See example/printd.c
+
+        Each invocation in a recursive call gets a new set of
+        automatic variables, independpent of the previous set.
+
+        In printd(123) the first printd receives argument n = 123.
+        It passes 12 to a second printd, and then 1 to a third.
+        The third-level printd prints 1, then returns to the second
+        level and prints 2, and then finally prints 3.
+
+        Recursion may provide no saving in storage, since somewhre a stack of the values
+        being processed must be maintained. Nor will it be faster.
+
+        Recursive code is more compact and possibly easier to write and understand than
+        the non-recursive equivalent.
+
+        Recursion is code for resursively defined data structures like trees
+
+4.11: The C Preprocessor
+        First step in compilation
+
+        Ex: #include and #define
+
+4.11.1: File Inclusion
+        Makes it easy to include collections of #defines and declarations
+
+        #include "filename" or #include <filename> is replaced to by the contents of the file filename.
+
+        If the filename is quoted, searching for the file begins where the source program was found
+        if the filename is in <>, searching follows an implementation-defined rule to find the file.
+
+        An included file may itself contain #include lines
+
+        There are often several #include lines at the betginning of a source file.
+
+        Used to access function prototype declarations for library functions from headers like <stdio.h>
+
+        #include is the preferred way to tie declarations together for a large program.
+        Guarantees that all the source files wil be suppplied with the same definiions and variable
+        declarations
+
+4.11.2: Macro Substitution
+        A definition has the form
+
+                #define name replacement text
+
+        Occurrences of the token name will be replaced by the replacment text. The name in
+        a #define has the same form as a variable name; the replacement text is arbitrary.
+
+        Replacement text is the rest of the line, but a long definition can be
+        continued onto several lines by placing a \ at the end of each line that
+        needs to be continued.
+
+        The scope of a name defined with #define is from its pont of definition to the
+        end of the source file being compiled
+
+        A definition may use previous definitions.
+
+        Substitutions are made only for tokens, and do not take place within quoted
+        strings.
+
+        Any name may be defined with any replacement text
+
+                #define forever for (;;)
+
+        Can define macros with arguments, so replacement text can be
+        different calls of the macro.
+
+        Ex: Macro max
+
+                #define max(A, B) ((A) > (B) > (A) : (B))
+
+        The max macro expands into in-line code. Each occurrence of a formal parameter will be
+        replaced by the corresponding actual argument.
+
+        Ex: x = max(p+q, r+s) -> x = ((p+q) > (r+s) ? (p+q) : (r+s))
+
+        As long as arguments are treated consistently there is no need for macros
+        for each data type you want to handle
+
+        #undef - used to undefine names
+
+        ## - concatenate actual arguments during macro expansion
+        
+        Ex: #define paste(front, back) front ## back
+                paste(name,1) creates the token name1
+
+4.11.3: Conditional Inclusion
+        It is possible to control preprocessing itself with conditional statements that are evaluated during
+        preprocessing. This provides a way to include code selectively, depending on the value  of conditions
+        evaluated during compilation.
+
+        #if - evaluates a constant integer expression (which may not include sizeof, casts, or enum constants)
+        If the expression is non-zero, subsequent lines until an #endif or #elif or #else are included
+
+        Ex: expression defined(name) - 1 if the name has been defined, and 0 otherwise
+        Guaruntees that the contents of a file are included only once
+
+        Ex:
+                #if !defined(HDR)
+                #define HDR
+
+                /* contents of hdr.h go here */
+
+                #endif
+
+        The first inclusion of hdr.h dfines the name HDR; subsequent inclusions wil
+        find the name defined and skip down to the #endif
+
+        Ex: Tests the name SYSTEM to decide which version of a header to include
+                #if SYSTEM == SYSV
+                        #define HDR "sysv.h"
+                #elif SYSTEM == BSD
+                        #define HDR "Bsd.h"
+                #elif SYSTEM == MSDOS
+                        #define HDR "msdos.h"
+                #else
+                        #define HDR "default.h"
+                #endif
+                #include HDR
+
+        #ifdef and #ifndef that test whether a name is defined.
+
+        Ex:
+                #ifndef HDR
+                #define HDR
+
+                /* contents of hdr.h go here */
+
+                #endif

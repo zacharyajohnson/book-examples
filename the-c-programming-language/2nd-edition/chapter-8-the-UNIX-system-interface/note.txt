@@ -1,0 +1,224 @@
+The UNIX operating system provides its services through a set of system calls
+
+System calls - Functions within the operating system that may be called by user programs
+        Used for maximum efficency
+
+        Access some facilies that are not in the standard library
+
+8.1: File Descriptors
+        In UNIX, all input and output is done by reading or writing files.
+        This is because all peripheral devices (keyboards, screens, etc) are
+        files in the file system.
+
+        When opening a file, UNIX will check things like if you have permission
+        to do so, if the file exists etc.
+
+        If a file can be successfully opened for reading / written, the program
+        will recieve a non-negative integer called a file descriptor
+
+        File Descriptor - used to identify the open file instead of the name
+                Analogous to the file pointer used in the standard library
+
+                Used to refer to an open file in UNIX
+
+                All information about an open file is maintained by the system;
+                the user program refers to the file only by the descriptor
+
+        In UNIX, standard input, standard output, and standard error are
+        referenced by using file descriptors 0, 1, and 2 respectivly. Each
+        program will have its own file descriptors for these streams.
+
+        Can change programs standard input / output by using < and >.
+        The program itself does not know where its input comes from and
+        where its output goes. This is configured at the shell
+                Ex: prog < infile > outfile
+
+8.2: Low Level I/O -- Read and Write
+        Input and output use the read and write system calls.
+
+        read(int fd, char* buf, int n);
+        write(int fd, char* buf, int n);
+                File descriptor, character array data is to go to or come from,
+                and the number of bytes to be transferred
+
+        Both returns a count of the number of bytes transferred
+
+        On reading, the number of bytes returned may be less than
+        the number requested.
+        
+        A return value of zero bytes implies end of file, and -1 indicates
+        an error of some sort.
+
+        For writing, the return value is the number of bytes written; an
+        error has occurred if this isn't equal to the number requested
+
+
+        Any number of bytes can be read or written in one call
+                1 byte - one character at a time ("unbuffered")
+
+                1024 / 4096 bytes - corresponds to a physical block
+                size on a peripheral device
+
+                Larger sizes will be more efficient because fewer system
+                calls will be made
+
+        Example - copy input to output
+        See example/copy-input-to-output-unix-syscalls.c
+
+        Example - getchar using UNIX syscalls
+        See example/getchar-unix-syscalls.c
+
+8.3: Open, Creat, Close, Unlink
+        open - used to open existing files
+                int open(char* name, int flags, int perms);
+
+                return file descriptor, -1 if there is
+                an error
+
+                Second argument, flags, is an int that specifies
+                how the ifle is to be opened
+                        O_RDONLY - open for reading only
+                        O_WRONLY - open for writing only
+                        O_RDWR - open for both reading and writing
+
+                        Defined in <fcntl.h> (System V UNIX) or
+                        <sys/file.h> (Berkeley (BSD) versions)
+                
+                It is an error to try and open a file that does not exist
+
+        creat - create new files, or re-write old ones
+                int creat(char *name, int perms);
+
+                Returns a file descriptor if it was able to create the file,
+                and -1 if not.
+
+                If the file already exists, will truncate it to zero length,
+                discarding previous contents of file
+
+                If the file does not already exist, will create it with the
+                permissions specified by perms argument
+                        Based on permission bits for owner, group and other
+                        
+                        Ex: 0755 - read(4), write(2) and execute(1) permissions 
+                        for owner, read(4) and write(2) for group and other
+
+        Ex: cp(copy)
+        See example/cp-unix-syscalls.c
+
+        There is a limit on the number of files that a program may have open
+        simultaneously. Any program that intends to process many files
+        must be prepared to re-use file descriptors.
+
+        close - breaks the connection between file descriptor and open file
+                Allows file descriptors to be reused
+
+        Termination of a program via exit or return from the main program closes
+        all open files.
+
+        unlink - removes the file name from the file system.
+                Corresponds to the standard library function remove
+
+8.4: Random Access -- Lseek
+        Input and output are normally sequential: each read or write takes place at
+        a position in the file right after the previous one.
+
+        When necessary, a file can be read or written in any arbitrary order.
+
+        lseek - move around in a file without reading or writing any data
+                long lseek(int fd, long offset, int origin);
+
+                Sets the current position in the file whose descriptor is fd
+                to offset, which is taken relative to the location
+                specified by origin. Subsequent reading or writing
+                will begin at that position.
+
+                Origin can be 0(beginning), 1(from current position), or
+                2(end of the file)
+
+                Ex:
+                        lseek(fd, 0L, 2) - appends to a file
+                        lseek(fd, 0L, 0) - "rewinds" to beginning of a file
+
+                Returns the resulting offset location as measured in bytes
+                from the beginning of the file or -1 if there is an error
+
+                Similar to standard library fseek(FILE* and returns nonzero if there was an error)
+
+8.5: Example -- An Implementation of Fopen and Getc
+        Implementation of the standard library routines fopen and getc.
+        See example/fopen-getc-unix-syscalls.c
+
+8.6: Example -- Listing Directories
+        fsize - will print sizes of all files in its command line
+        argument list
+
+        See example/fsize-unix-syscalls.c
+
+        Directory - a file that contains a list of filenames and some indication
+        of where they are located.
+                Location is an index into a table called the inode list
+
+                Directory entry consists of a filename and an inode number
+
+        Inode - where all information for a file is except its name is kept
+
+        Dirent structure - directory entry
+                inode and name
+
+                The structure of this can vary between systems
+
+        opendir / readdir / closedir
+
+        Opendir returns a pointer to a structure called DIR
+                analogous to FILE
+
+                Used in readdir and closedir
+
+                Contains pointer to Dirent, iterated each
+                time readdir is called until null
+
+        stat - takes a filename and returns all the information in the inode for
+        that file
+                char *name;
+                struct stat stbuf;
+                int stat(char *, struct stat*);
+
+                stat(name, &stbuf);
+
+                Info includes inode number, mode bits, user id, group id,
+                file sizse in characters, access/modification time, etc
+
+8.7: Example -- A Storage Allocator
+        Unrestricted storage allocator
+
+        See example/storage-allocator-unix-syscalls.c
+
+        Calls to malloc and free may occur in any order
+        Malloc calls upon the operating system to obtain
+        more memory as necessary.
+
+        Malloc will request space from the operating system
+        as needed. Since other activities in the program
+        may also request space without calling the allocator,
+        the space that malloc manages may not be contiguous.
+
+        Mallocs free4 space is kept as a list of free blocks.
+        Each block contains a size, a pointer to the next block,
+        and the space itself. The blocks are kept in order of
+        increasing storage address, and the last block (highest address)
+        points to the first.
+
+        When a request is made, the free list is scanned until a big-enough
+        block is found ("first fit" algorithim). "Best fit" is finding
+        the smallest block to satisfy the request. If the block is exactly
+        the size request, it is unlinked form the list and returned to the user.
+        If the block is too big, it is split, and the proper amound is returned
+        to the user while the residue remains on the free list. If no big-enough block
+        is found, another large chuck is obtained from the operating system and linked into
+        the free list.
+
+        Freeing will also also cause a search of the free list, to find the proper place to insert
+        the block being freed. If the block being freed is adjacent to a free block on either side,
+        it is coalesced with it into a single bigger block, so storage does not become too
+        fragmented. Adjacency is easy to figure out because they are maintained in order
+        of increasing address.

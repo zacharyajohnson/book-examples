@@ -1,0 +1,952 @@
+12/29/23
+
+1.1: Getting Started
+
+        The first program to write is the same for all languages:  
+            
+            Print the words
+                hello, world
+        
+        See example/hello.c
+
+        How to run the program depends on the system you are using.
+        Unix operating systems you create a file whose name ends in ".c", such as hello.c
+
+        You then compile it with the command
+            cc hello.c
+
+        Hello World program explanation:
+
+            A C program consists of functions and variables.
+
+            A function contains statements that specify the computing operations to be done.
+            Variables store values used during the computation.
+
+            You can give a function any name except the name main. The function named main
+            is where your program starts executing code. Every program must have a main function
+            somewhere
+
+            Main can call other functions to perform tasks.
+            For example, #include <stdio.h> tells the compiler to include info 
+            about the standard input/output library. You can also write functions 
+            yourself and call them later to perform tasks.
+
+            Passing data between functions can be done via function arguments. 
+            The parentheses after the function name surround the argument list.
+            In our example, main is defined as a function that expects no arguments, which
+            is indicated by the empty list ().
+
+            The statements of a function are enclosed in braces {}. The function main
+            contains only one statement, 
+            
+                printf("hello, world\n");
+
+            A function is called by naming it, followed by a parenthesized list of arguments
+            The line above calls the printf function with the argument "hello, world\n".
+            printf is a library function that prints output, such as the string of characters
+            between the quotes, "hello, world\n" 
+
+            A sequence of characters in double quotes, like "hello, world\n", is called a
+            character string or string constant.
+
+            The sequence \n in the string is C notation for the newline character, which when
+            printed advances the output to the left margin on the next line. If you leave out
+            the \n, you will find that there is no line advance after the output is printed.
+            You must use \n to include a newline character in the printf argument; 
+            if you try something like
+
+                printf("hello, world
+                ");
+
+            the C compiler will produce an error message.
+
+            printf never adds a newline automatically, so several calls to the function can be used
+            to build up the output. An equivalent program to our one above would be:
+
+                #include <stdio.h>
+
+                int main(void) {
+                    printf("hello, ");
+                    printf("world");
+                    printf("\n");
+                }
+
+            C provides characters such as \t for tab, \b for backspace
+            \" for double quote, and \\ for the backslash itself.
+            See Section 2.3 for a complete list
+
+
+                               Hello World example summary
+        --------------------------------------------------------------------------------------
+        #include <stdio.h>    - include information about standard library
+
+        int main(void)        - define a function named main 
+                                that receives no argument values
+
+        {                     - statements of main are enclosed in braces
+
+            printf("hello, world\n");        - main call library function printf
+                                               to print this sequence of characters;
+                                               \n represents the newline character
+
+        }
+                                        The first C program.
+        --------------------------------------------------------------------------------------
+
+1.2: Variables and Arithmetic Expressions
+
+        The following program uses the formula C = (5/9)(F - 32) to
+        print the following table of Fahrenheit temperatures and their Celsius equivalents:
+
+            0	-17
+            20	 -6
+            40   4
+            60	 15
+            80   26
+            100  37
+            120	 48
+            140	 60
+            160	 71
+            180	 82
+            200	 93
+            220	 104
+            240	 115
+            260	 126
+            280  137
+            300	 148
+
+
+        The program is comprised of a function called main. It introduces several new ideas,
+        including comments, declarations, variables, arithmetic expressions, loops, and formatted output.
+
+        see example/temp-conversion-fahr-to-cel.c
+
+        The two lines
+
+            /* print Fahrenheit-Celsius table
+             * for fahr = 0, 20, ..., 300 */
+
+        are a comment, which is used to explain what parts of program do.
+        Any characters between /* and */ are ignored by the compiler and
+        can be used to make a program easier to understand. Comments
+        can appear anywhere a blank or tab or newline can.
+
+        In C, all variables must be declared before they are used.
+        A declaration announces the properties of variables; it consists
+        of a type name and a list of variables, such as:
+
+            int fahr, celsius;
+            int lower, upper, step;
+
+        The type int means that the variables are integers. Variables
+        can also be float, which means floating point, i.e., numbers
+        that may have a fractional part. The range of both int and float
+        depends on the machine you are using, but common ranges include 32bit
+        for both values.
+
+        C provides the following basic data types:
+            
+            char        character - a single byte
+            int         integer, whole numbers
+            short       short integer
+            long        long integer
+            float       single-precision floating point
+            double      double-precision floating point 
+
+        The size and value range of these data types are machine-dependent, and can vary greatly.
+
+        Computation in the tempature conversion program begins with the assignment statments:
+            
+            lower = 0;
+            upper = 300;
+            step = 20;
+            fahr = lower;
+
+        which set the variables to their initial values. 
+        Individual statements are terminated by semicolons.
+
+        Each line of the table is computed the same way, so we use a loop 
+        that repeast once per output line; this is the purpose of the while loop
+
+            while (fahr <= upper) {
+                ...
+            }
+
+        The while loop works like this:
+            The condition in the parantheses is tested
+            If it is true (fahr is less than or equal to upper),
+            the body of the loop (the three statements enclosed in braces) is executed
+               
+            Then the condition is re-tested, and if true, the body is executed again.
+            When the test becomes false (fahr exceeds upper) the loop ends, and
+            execution continues at the statement that follows the loop.
+
+
+        The body of a while can be one or more statements enclosed in braces,
+        like above, or a single statement without braces, as in
+
+            while (i < j)
+                i = 2 * i;
+
+
+        In the first line of the loop body, The Celsius temperature
+        is computed and assigned to the variable celsius by the statement:
+
+            celsius = 5 * (fahr-32) / 9;
+
+        The reason for multiplying by 5 and then dividing by 9 instead
+        of just multiplying by 5/9 is that in C, integer division truncates:
+        any fractional part is discarded. Since 5 and 9 are integers, 5/9 would 
+        be truncated to zero and so all the Celsius temperatures would be reported as zero.
+
+
+        The next statment of the loop body is:
+
+            printf("%d\t%d\n", fahr, celsius);
+
+        This statement shows printf can do more then just outputting
+        values. In addition to printing, printf
+        can be used to control the format of outputted text.
+        Its first argument is a string of characters to be printed,
+        with each % indicating where one of the other (second, third, ...)
+        agruments is to be substituted, and in what form it is to be printed.
+        For instance, %d specifies an integer argument, so the 
+        example  
+            
+            printf("%d\t%d\n", fahr, celsius);
+
+        causes the values of the two integers fahr and celsius to be printed, with a 
+        tab (\t) between them.
+        Each % in the first argument of printf is paired with the corresponding second
+        argument, third argument, etc.; they must match up properly by number
+        and type, or you'll get wrong answers.
+
+
+        printf is not part of the C language, it is a function defined from the 
+        C standard library. The behavior is defined in the C ANSI standard,
+        so multiple compilers implementations of the function should behave
+        the same.
+
+
+        There are a few problems with the temperature conversion program.
+        The first one is the output isn't pretty since the numbers are not
+        right-justified. This can be fixed by adding a width to each %d
+        in the printf statement. When provided with a width, the numbers
+        will be right-justified. This can be done as follows:
+
+            printf("%3d %6d\n", fahr, celsius);
+
+        This will print the first number 3 digits wide, and the second number
+        6 digits wide. The output will look much nicer:
+
+              0    -17
+             20     -6
+             40      4
+             60     15
+             80     26
+            100     37
+            120     48
+            140     60
+            160     71
+            180     82
+            200     93
+            220    104
+            240    115
+            260    126
+            280    137
+            300    148
+
+
+
+        The biggest problem with our temperature conversion program
+        is that we used integers for our calculations, which
+        leads to really inacurate Celsius values. For example,
+        0F is about -17.8 C, not -17. To get more accurate answers,
+        we need to use floating point variables instead of integers,
+        so we can store fractional answers. This requires us 
+        to change our program again 
+
+        the program produces the following output:
+            
+              0  -17.8
+             20   -6.7
+             40    4.4
+             60   15.6
+             80   26.7
+            100   37.8
+            120   48.9
+            140   60.0
+            160   71.1
+            180   82.2
+            200   93.3
+            220  104.4
+            240  115.6
+            260  126.7
+            280  137.8
+            300  148.9
+
+
+        This is very similar to our original program, except the fahr and celcius
+        variables are now declared as floats instead of ints, and the formula
+        conversion is written in a more natural way. Printf need a slight modification
+        as well.
+
+        We were unable to use 5/9 in the previous version because integer divsion 
+        would truncate it to zero. A decimal point in a constant indicates that it
+        is a floating point, so 5.0 / 9.0 is not truncated because it is the
+        ratio of two floating point values. 
+
+        If an arithmetic operator has integer operands, an integer 
+        operation is performed. If an arithmetic operator has one floating-point
+        operand and one integer operand, the integer will be converted to a floating
+        point before the operation is done. If we had written fahr-32, the 32 would
+        be automatically converted to floating point.
+
+        The detailed rules for when integers are converted to floating point
+        are in Chapter 2.
+
+
+        The printf conversion is slightly different as well. The printf
+        conversion %3.0f says that a floating point number (here fahr)
+        is to be printed at least three characters wide, with no
+        decimal point and no fraction digits. %6.1f describes 
+        another number (celcius) that is to be printed at least six
+        characters wide, with 1 digit after the decimal point.
+
+
+        Width and precision can be ommitted from a conversion. %6f says that
+        the number is to be at least six characters wide; %.2f specifies two
+        characters after the decimal point, but the width can be anything;
+        and %f merely says to print the number as a floating point.
+
+        Here are some more examples below:
+
+            %d          print as decimal integer
+            %6d         print as decimal integer, at least 6 characters wide
+            %f          print as floating point
+            %6f         print as floating point, at least 6 characters wide
+            %.2f        print as floating point, 2 characters after decimal point
+            %6.2f       print as floating point, at least 6 wide and 2 after decimal point
+
+        printf also recognizes %o for octal, %x for hexadecmial, %c for character,
+        %s for character string, and %% for % itself. 
+
+1.3: The For Statement   
+
+        There are many ways to write a program that performs the same function
+        For example, here is another way to write the temperature converter from the last section.
+        See example/temp-conversion-for-loop.c
+
+        The program prints the identical conversions as in section 1.2,
+        but uses a for loop instead of a while loop. This leads to some drastic
+        differences in how the code looks.
+
+        First, this version only uses the fahr variable. The lower and upper limits
+        appear in the for loop itself, so those variables could be removed. We
+        also pass in the result of the Celsius conversion straight to printf
+        instead of storing it in the celsius variable first. These changes lead
+        to less and easier to follow code.
+
+
+        The for loop itself is a generalization of the while loop. There are three parts to 
+        a foor loop. The first part is the initalization. 
+            
+            fahr = 0
+
+        This step is done once, before the loop is entered. The second part
+        is the test or condition that controls the loop:
+
+            fahr <= 300
+
+        The condition is evaluted; if it is true, the body of the loop (the printf in this case)
+        is executed. The third and final step is the incremental step.
+
+            fahr = fahr + 20
+
+        This is executed after the body has been executed. After the incremental step,
+        the condition is re-evaluated. The loop terminates if the condition has become false.
+
+        As with the while loop, the body of the for loop can be a single statement, or a group
+        of statements enclosed in braces. The initialization, condition, and increment can be
+        any expressions. 
+
+        The choice between for and while is arbitrary, and depends on the situation.
+
+1.4: Symbolic Constants 
+
+        In general, its a bad idea to bury magic numbers in a program.
+        They have no context to help a programmer reading your code to understand what it is.
+        For example, in our for loop version of our temperature program, 300 is the max temp we go to, while 20, is the
+        increment in our calculation. We know this because we wrote the program, but a reader of our code
+        might not.
+
+        One way to handle magic numbers is to give them meaningful names.
+
+        A #define line defines a symbolic name or symbolic constant to be a particular string of characters
+
+            #define   name   replacement text
+
+        Any occurrence of name will be replaced by the corresponding replacement text. The name has the same
+        form as a variable name: a sequence of letters and digits that begins a the letter.
+        The replacemnet text can be any sequence of characters; it is not limited to numbers
+
+
+                #include <stdio.h>
+
+                #define  LOWER  0
+                #define  UPPER  300
+                #define  STEP   20
+
+                /* print Fahrenheit-Celcius table */
+                int main(void) {
+                        int fahr;
+             
+                        for (fahr = LOWER; fahr <= UPPER; fahr = fahr + STEP)
+                                printf("%3d %6.1f\n", fahr, (5.0 / 9.0) * (fahr-32));
+                }
+
+
+        The quantities LOWER, UPPER and STEP are symbolic constants, not variables, so they
+        do not appear in declarations. Symbolic constant names are conventionally
+        written in upper case so they can be readily distinguished from lower case variable names.
+        Notice that there is no semicolon at the end of a #define line.
+
+1.5: Character Input and Output
+
+        This chapter will focus on a series of programs for processing
+        characters.
+
+        The standard library functions for this is very simple. Text input
+        or output, regardless of where it originates or where it goes to,
+        is dealt with as streams of characters. A text stream is a
+        sequence of characters divided into lines; each line consists of
+        zero or more characters followed by a newline character.
+
+        The standard library provides functions for reading or writing one 
+        character at at time, with getchar and putchar being the simplest
+        to understand.
+
+        Each time getchar is called, it reads the next input character from
+        a text stream and returns that as its value. For example, after
+
+            c = getchar()
+
+        the variable c contains the next character of input. Characters usually
+        come from the keyboard, but can come from files as well. Input
+        from files is discussed in Chapter 7.
+
+
+        The function putchar prints a character each time it is called:
+
+            putchar(c)
+
+        prints the contents of the integer variable c as a character, usually on
+        the screen. Calls to putchar and printf may be interleaved; the output
+        will appear in the order in which the calls are made.
+
+1.5.1: File Copying
+
+        With just getchar and putchar, you can write
+        a lot more useful programs then one might think.
+
+        The simplest program would be one that copies its input
+        to its output one character at a time
+
+        See example/copy-input-to-output-1st-version.c
+
+        The relational operator != means "not equal to" 
+
+        What appears on the screen or keyboard is in the end, like everything else on a computer,
+        a series of bits the computer knows how to read and interpret. The type
+        char is specifically meant for storing character data, but any integer type
+        can be used. We use int for a subtle but important reason.
+
+        The problem arises when trying to distinguish the end of input from valid data.
+        The solution is that getchar returns a distinct value when there is no more
+        input, a value that cannot be confused with any real character. 
+        This value is called EOF, for "end of file." We must declare c to be a type big enough to hold any value
+        that getchar returns. We can't use char since c must be big enough to hold EOF in addition to
+        any possible char. Therefore we use int.
+
+        EOF is an integer defined in <stdio.h>, but the specific numberic value doesn't matter as long as it
+        is not the same as any char value. 
+
+
+        Our copy program above, can be written slightly better. In C, any assignment, such as
+
+            c = getchar()
+
+        is an expression and has a value, which is the value of the left hand side after
+        the assignment. This means that an assignment can appear as part of a larger
+        expression. If the assignment of a character to c is put inside the test part
+        of a while loop, the copy program can be written
+
+        See example/copy-input-to-output-2nd-version.c
+
+        The while gets a character, assigns it to c, and then tests whether the character was EOF.
+        If not, the body is executed and the character is printed. This repeats until EOF is read,
+        then the while terminates, along with main.
+
+
+        The parentheses around the assignment within the condition are necessary.
+        The precedence of != is higher than that of =, which means that without
+        parentheses the relational test != would be done before the assignment
+        =. So the statement
+
+            c = getchar() != EOF
+
+        is equivalent to
+
+            c = (getchar() != EOF)
+
+        This has the undersired effect of setting c to 0 or 1, depending
+        on whether or not the call of getchar read EOF
+
+1.5.2: Character Counting
+
+        The following program counts the number of inputed characters
+        See example/count-characters-1st-version.c
+
+        The statement
+
+            ++nc;
+
+        is a new operator. ++ means increment by one.
+        You could instead write nc = nc + 1 but ++nc is more
+        concise and often more efficent.
+
+        There is a corresponding operator -- to decrement by 1. 
+
+        The operators ++ and -- can be either prefix operators(++nc)
+        or postfix (nc++). These forms have different values in expressions,
+        and will be explored in Chapter 2. Both ++nc and nc++ increment nc either
+        way. For now we will stick with prefix form.
+
+        The character counting program stores the count in a long instead of an int
+        long integers are at least 32 bits. Although on some machines,
+        int and long are the same size, on others an int is 16 bits, with a 
+        maximum value of 32767, and it would take relatively little input to overflow
+        an int counter. The %ld in printf tells it that the argument is a long integer.
+
+        It is possible to deal with an even bigger character count by using a double.
+        You can also use a for loop instead of a while, to illustrate another way to write
+        the loop
+
+        See example/count-characters-2nd-version.c
+
+
+        printf uses %f for both float and double. %.0f suppresses printing of the
+        decimal point and the the fraction point, which is zero.
+        The body of the for loop is empty, becuase all of the work is done in the
+        test and increment parts. The rules for C require that a for statement
+        have a body. The isolated semicolon, called a null statement, is
+        there to satisfy that requirement. 
+
+1.5.3: Line Counting
+
+        The next program counts input lines.
+        The C standard library ensures that
+        an input text stream appears as a sequence of lines,
+        each terminated by a newline. Hence, counting lines is just counting newlines
+
+        See example/count-lines.c
+
+        The body of the while nof consists of an if, which in turn controls the
+        increment ++nl. The if statement tests if c is the newline character,
+        and increments if it is. If not, it doesn't execute the statement inside it.
+
+        The double equals sign == is the C notation for "is equal to" This symbol
+        is used to distinguish the equality test from the single = that C
+        uses for assignment. 
+
+        A character written between single quotes represents an integer value equal to the
+        numerical value of the character in the machine's character set. This is called
+        a character constant. For example, 'A' is a character constant and in the ASCII
+        character set it would have a value of 65. Escape sequences can be used in
+        character constants. For example '\n' would have a value of 10 in ASCII.
+
+        One thing to note, is that '\n' is a single character, and in expressions is
+        an integer. "\n" is a string constant that happens to only contain one character.
+        This topic is explored further in Chapter 2.
+
+1.5.4: Word Counting
+
+        The following program will count lines, words, and characters
+        for a given set of input. A word in this case is defined as
+        any sequence of characters that does not contain a blank, tab or newline.
+        This is a bare bones version of the UNIX program wc.
+
+        See example/wc.c
+
+        Every time the program encounters the first character of a word, it counts
+        one more word. The variable state records whether the program is currently 
+        in a word or not; initially it is "not in a word", which is assigned the value OUT.
+        We use symbolic constants IN AND OUT to add clarity to the program.
+
+        The line
+
+            nl = nw = nc = 0;
+
+        sets all three variables to zero. This is not a special case,
+        but a consequnce of the fact that an assignment is an expression with a value
+        and assignments associate from right to left. It's as if we had written
+
+            nl = (nw = (nc = 0));
+
+        The operator || means OR, so the line
+
+            if (c == ' ' || c == '\n' || c == '\t')
+
+        says "if c is a blank or c is a newline or c is a tab".
+
+        The && operator is for AND, however it does have higher precedence than ||.
+        Expressions connected by && or || are evaluated left to right, and it is
+        guaranteed that evaluation will stop as soon as the truth or falsehood is known.
+
+        If c is a blank, there is no need to test whether it is a newline or tab,
+        so these tests are not made.
+
+        The program also shows an example of an else, which specifies an
+        alternative action if the condition part of an if statement is fale.
+        It takes the form
+
+            if (expression)
+                statement
+            else
+                statement
+
+        Only one of the two statements associated with an if-else is executed.
+        If the if expression is true, the statements inside the if is executed.
+        If the expression is false, the statements inside the else block is 
+        executed. Each statement can be a single statement or several in braces.
+
+1.6: Arrays
+
+        The following program will count the number each digit,
+        white space character (blank, tab, newline), and all other
+        characters appear from input given.
+
+        See example/count-characters-with-arrays.c
+
+        The line 
+
+            int ndigit[10];
+
+        declares ndigit to be an array of 10 integers. Array indexes 
+        start at zero in C, so ndigit[0] would get the first element of the array.
+        Array indexes can be any integer expression, which includes integer variables
+        like i, and integer constants. This is useful, since instead of declaring
+        10 variables for each digit, we can create one variable that can store
+        the count for each digit.
+
+
+        The line
+
+            if (c >= '0' && c <= '9')
+
+        determines whether the character in c is a digit. If it is, the numeric
+        value of that digit is 
+
+            c - '0'
+
+        This works only if the digits themselves have increasing values. Fortunately,
+        this is true for all character sets.
+
+        Chars are just small integers, so char variables and constants are identical to ints in
+        arithmetic expressions. For example, c - '0' is an integer expression with a 
+        value between 0 and 9 corresponding to the character '0' to '9' stored in c,
+        and is a valid index for the array ndigit.
+
+
+        The lines
+
+            if (c >= '0' && c <= '9')
+                ++ndigit[c-'0']
+            else if (c == ' ' || c == '\n' || c == '\t')
+                ++nwhite;
+            else
+                ++nother;
+
+        decide whether a character is a digit, white space, or
+        something else
+
+        The pattern
+
+            if (condition_1)
+                statement_1
+            else if (condition_2)
+                statement_2
+            ...
+                ...
+            else
+                statement_n
+
+        is used in programs to express multi-way decisions.
+        The conditions are evalutated in order from the top until
+        some condition is satisfied; at that point the corresponding
+        statement part is executed. If none of the conditions
+        are satisfied, the statement after the final
+        else is executed if it is present. If the final else
+        and statement are omitted, no action takes place.
+        There can can be an number of else if groups between
+        the initial if and the final else.   
+
+1.7: Functions
+
+        A function provides a way to encapsulate a set of
+        computational steps, which can be reused without worrying
+        about its implementation.
+
+        C makes function usage easy, convenient and efficient; you will often
+        see a short fucntion defined and called only once, just because it clarifies some 
+        piece of code
+
+        So far, we have used functions like printf, getchar, and putchar that are
+        provided by the C standard library. We can also write our own functions.
+
+        The following program creates a power(m,n) function, which will raise
+        an integer m to a positive integer power n. 
+        
+        See example/power
+
+
+        A function definition has the form:
+
+            return-type function-name(parameter declarations, if any) {
+                declarations
+                statements
+            }
+
+        A function definition can appear in any order, and in one source file or several,
+        although no function can be split between files.
+
+
+
+        The function power is called twice by main in the line
+
+            printf("%d %d %d\n", i, power(2, i), power(-3,i));
+
+        Each call passes two arguments to power, which each time returns a integer
+        to be formatted and printed. In an expression, power(2, i) is an integer.
+
+        The first line the power function itself,
+
+            int power(int base, int n)
+
+        declares the parameter type and names, and the type of the result 
+        the function returns. The names used by power for its parameters
+        are local only to power, and can be used in other functions
+        without error.
+
+
+        A parameter is a variable named in the parenthesized list in a
+        function defintion. An argument is a value(s) used in a call of 
+        a function. The terms formal argument and actual argument
+        are sometimes used for the same distinction. 
+
+        The value that power computes is returned to main by the return
+        statement. Any expression may follow return
+
+            return expression
+
+        A function doesn't need to return a value. A return statement with
+        no expression does this, as does reaching the end of a function(terminating brace)
+        The caller of the function can also ignore the value returned by a function
+        if not needed. 
+
+        In this example, main returns a value as well. Main is a normal function,
+        and it may return a value to its caller, which is in effect the environment in
+        which the program was executed. A return value of zero implies normal
+        termination; non-zero values signal unusual or erroneous terminal
+        conditions. Returning a value from main is considered a best 
+        practice, so we will do it from now on.
+
+
+        The declaration 
+
+            int power(int m, int n);
+
+        just before main says that power is a function that expects two int
+        arguments and returns an int. This declaration, which is called a function prototype,
+        has to agree with the definition and uses of power. It is an error if the
+        definition of a function or any uses of it do not agree with its prototype
+
+        Parameters names need not agree. Parameter names are optional in a
+        function prototype. So, we could have also written
+
+            int power(int, int);
+
+        However, names are often recommended, as a good name for function
+        parameters make for better clarity and documentation.
+
+1.8: Arguments -- Call by Value
+
+        In C, all function arguments are passed "by value"
+        This means that the called function is given the values
+        of its arguments in temporary variables rather than the originals.
+        This means that the called function cannot directly alter a variable
+        in the calling function; it can only alter its private, temporary copy.
+
+        Call by value has some advantages. It leads to more compact
+        programs with fewer extraneous variables, becuase parameters
+        can be treated as conveniently initialized local variables in the called routine.
+
+        Take this version of our power function from the last section
+
+            /* power: raise base to n-th power; n >= 0; version 2 */
+            int power(int base, int n) {
+                int p;
+            
+                for (p = 1; n > 0; --n)
+                    p = p * base;
+                return p;
+            }
+
+        The parameter n is used as a temporary variable, and is counted down
+        until it become zero; there is no longer a need for the variable i.
+        Whatever is done to n inside power has no effect on the argument
+        that power was orginally called with
+
+        When necessary, it is possible to have a function modify a variable
+        in a calling routine. The caller must provide the address of the variable to be
+        set(pointer) and the called function must declare the parameter to be a pointer and
+        access the variable indirectly through it. Pointers will be covered in Chapter 5.
+
+        When using arrays as a function argument, the value passed to the function is the location
+        or address of the beginning of the array -- there is no copying of array elements. 
+        By specifing the index into an array, the function can access and alter any 
+        element of the array. 
+
+
+1.9: Character Arrays
+
+        The most common type of array in C is an array of characters.
+        The following program reads a set of text lines and prints the longest one 
+        while using character arrays.
+
+        See example/print-longest-line.c
+
+        The functions get_line and copy are declared at the beginning of the program,
+        which we assume is in one file.
+
+        In getline, the arguments are declared by the line
+
+            int get_line(char s[], int lim)
+
+        which specifies that the first argument, s, is an array, and the second, lim, is
+        an integer. The purpose of supplying the size of an array in a declaration is to set
+        aside storage. The length of the array s is not necessary in get_line since its
+        size is set in main. get_line uses return to send a value back to the caller. get_line
+        also returns an int. Since int is the default return type, it could be omitted like
+        this
+
+            get_line(char s[], int lim)
+
+        Some functions return a useful value; others, like coyp, are used only for their effect
+        and return no value. The return type of copy is void, which states
+        explicitly that no value is returned. 
+
+        get_line puts the character '\0' (the null character, whose value is zero)
+        at the end of the array it is creating, to mark the end of the string of
+        characters. This is the covention in C. When a string constant like
+
+            "hello\n"
+
+        appears in a C program, it is stored as an array of characters
+        containing the characters of the string and terminated with a '\0' to
+        mark the end. Most functions in C that handle strings of characters,
+        such as printf depend on this detail to function correctly. Our
+        copy function relies on this as well.
+
+        One issue a program like this might have is what to do if the line
+        is bigger then the size of the array itself is? We get around this
+        in get_line by stopping the collecting of characters into
+        the line array when the max character limit is reached.
+        This is in the line
+
+            for(i = 0; i < lim - 1 && (c = getchar()) != EOF && c != '\n'; ++i)
+
+        We might have instead wanted to choose what to do, but for the sake of 
+        simplicity, we have chosen the simple solution above. 
+
+1.10: External Variables and Scope
+
+        Varibles declared in functions, such as main, are private
+        or local to the function itself. No other function can
+        access them. For example, a variable i in one function is
+        unrelated to a variable i in another function.
+        Each local variable in a function comes into existence
+        only when the function is called, and disappears when
+        the function is exited. These types of variables are sometimes
+        called automatic variables. We will use the term automatic
+        variable from now on.
+
+        Because automatic variables come and go with function invocation, they
+        do not retain their values from one call to the next, and must be
+        explicitly set upon each entry. If they are not set,
+        they will contain garbage values.
+
+
+        It is possible to define variables that are external to all functions,
+        that is, variables that can be accessed by name by any function. 
+        Since external variables are globally accessible, they can
+        be used instead of argument lists to communicate data
+        between functions. Since external variables exist for as
+        long as a program runs, they retain their values even after the fucntions
+        that set them have returned.
+
+        An external variable must be defined, exactly once, outside of any function;
+        this sets aside storage for it. The variable must also be declared in each
+        function that wants to access it; this states the type of the variable. The declaration
+        may be an explicit extern statement or may be implicit from context.
+
+        The following program is our print longest line program modified to use the
+        extern statement where applicable 
+
+        See example/print-longest-line-with-extern.c
+
+        The change to the program itself involves changes to all three of the functions
+        of the program. The line, longest, and max variables are now external
+        variables
+
+
+        The external variables in main, getline, and copy are defined by the
+        first lines of the example. Before a function can use an external variable,
+        the name of the variable must be made known to the function. One way to do this is to 
+        write an extern declaration. The declaration is the same as before except
+        for the added keyword extern.
+
+        In certain circumstances, the extern declaration can be omitted. If the definition
+        of an external variable occurs in the source file before its use in a particular function,
+        then there is no need for an extern declaration in the function. The extern
+        declarations in main, getline and copy are redundant.
+
+
+        If the program is in serveral source files, and a variable is defined in file1
+        and used in file2 and file3, then extern declarations are needed in file2
+        and file3 to connect the occurrences of the varaibles. The usual practice
+        is to collect extern declarations of variables and functions in a seperate file,
+        historically called a header, that is included by #include at the start of 
+        each source file. This is discussed in Chapters 4 and 7 and Appendix B.
+
+
+        getline and copy no longer need arguments with our external variables, so we
+        get rid of them. A first attempt would be to write getline() and copy() for the
+        function prototypes. However, due to compatibility with older C programs, 
+        an empty parameter list allows a varied unchecked list of arguments
+        to be passed into a function. We must specifiy the word void in
+        the list for an explicitly empty list.
+
+
+        "Definition" - the place where the variable is created or assigned storage.
+        "Declaration" - refers to to places where the nature of the variable
+        is stated but no storage is allocated. 
+
+
+        There is a tendency to make variables external all the time. Argument lists are short
+        and variables are always accessible where they need to be used. However, external
+        variables are always there, even when you don't want them. Using them too
+        much complicates the flow of programs, and following how variables are modified
+        is hard to follow. Since the flow is so hard to follow, modifying the program
+        is hard to do as well. The rewrite of print longest line is inferior to the original
+        one we wrote.

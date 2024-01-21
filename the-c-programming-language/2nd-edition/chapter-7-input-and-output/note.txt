@@ -1,0 +1,461 @@
+01/17/2024
+
+7.1: Standard Input and Output
+        Simple model of text input and output
+
+        A text stream consists of a sequence of lines; each
+        line ends with a newline character. If the system
+        doesn't operate that way, the library does whatever is
+        necessary to make it appear as if it does.
+                Ex: converting carriage return and linefeed to newline
+                on input and back again on output.
+
+        int getchar(void) - read one character at a time from the
+        standard input (normally the keyboard). Returns EOF when it
+        enounters end of file.
+
+        EOF
+                Defined in stdio.h
+
+                Usually -1, but can vary
+
+        < - can be used to substitute a file for the
+        keyboard for input.
+                Ex: prog < infile cause prog to read characters from infile
+                when using getchar
+
+        | - pipes output from one program to input of another program
+                Ex: otherprog | prog will cause the input for prog
+                to be whatever otherprog outputs.
+
+
+        int putchar(int) - puts the character c on the standard output (default is the screen).
+        Returns the character written, or EOF if an error occurs.
+
+        > - Can be used to direct output to a file
+                Ex: prog > outfile will write standard output to outfile
+
+        Pipes can be used to change the output of your program as well.
+                Ex: prog | anotherprog
+
+        Output via printf will will show up in whatever standard output is.
+
+        Calls to putchar and printf may be interleaved. Output appears in the order
+        in which the calls were made.
+
+        Ex: lower - convert input to lower case
+
+        See example/lower.c
+
+01/18/2024
+
+7.2: Formatted Output -- Printf
+        Output function that translates internal values to characters.
+
+        int printf(char *format, arg1, arg2, ...);
+
+        Converts, formats, and prints its arguments on the standard output
+        under control of the format. It returns the number of characters
+        printed.
+
+        Two types of objects:
+                Ordinary characters
+                        Copied to output stream
+
+                Conversion specifications
+                        Causes conversion and printing of the next successive
+                        argument to printf
+
+                        Each one begins with a % and ends with a conversion character.
+
+                        Between % and the conversion character there can be
+                                A minus sign - specifies left adjustment of the converted arugment
+
+                                A number that specifies the minimum field width. The converted argument
+                                will be printed in a field at least this wide. If necessary it will be
+                                padded on the left(or right, if left adjustment is called for) to make
+                                up the field width.
+
+                                A period, which sperates the filed width from the percision
+
+                                A number, the precision, that specifies the maximum number of characters
+                                to be printed from a string, or the number of digits after the decimal
+                                point of a floatin-point value, or the minimum number of digits for an
+                                integer.
+
+                                An h if the integer is to be printed as a short, or l(letter ell) if as a long.
+
+        If the character after the % is not a conversion specification, the behavior is undefined.
+
+        Printf Conversion Table
+                d, i - int; decimal number
+
+                o - int; unsigned octal number (without a leading zero).
+
+                x, X - int; unsigned hexadecimal number (without a leading 0x or 0X).
+                using abcdef or ABCDEF for 10-15
+
+                u  - int; unsigned decimal number
+
+                c - int; single character
+
+                s - char*; prints characters from the string until a '\0' or the number of
+                characters given by the precision
+
+                f - double; [-]m.dddddd, where the number of d's is given by the precision
+                (default 6)
+
+                e, E - double; [-]m.dddddde+xx or [-]m.ddddddE+xx, where the number of d's is
+                given by the precision (default 6)
+
+                p - void*; pointer (implementation-dependent representation)
+
+                % - no argument is converted; print a %
+
+        A width or precision may be specified as *, in which case the value is computed by converting
+        the next argument (which must be an int).
+                Ex: printf("%.*s", max, s);
+
+        Printf uses its first argument to decide how mnay arguments follow and what their types are.
+        It will get confused, and you will get wrong answers, if there are not enough arguments or
+        if they are the wrong type.
+
+        sprintf - does the same conversions as printf does, but stores the output in a string
+                Ex: int sprintf(char *string, char *format, arg1, arg2, ...);
+
+                Formats the arguments in arg1, arg2, etc according to format, but places
+                the reult in a string instead of on the standard output; string must
+                be big enough to receive the result.
+
+7.3: Variable-length Argument Lists
+        The declaration for printf is int pirntf(char *fmt, ...);
+
+        Declaration ... means that the number and types of the arguments
+        after fmt may vary. Can only appear at the end of an argument list.
+
+        minprintf - simpliar version of printf
+        See example/minprintf.c
+
+        minprintf can access the argument list by using the macro definitions
+        defined in <stdarg.h>
+
+        Type va_list - declares a variable that will refer to each argument.
+
+        Macro va_start - initializes variable to point to first unamed argument.
+                Must be called once before variable can be used.
+
+                When calling, there must be at least one argument. The second argument
+                is the named parameter that proceedes the var arg list in the function
+                call.
+
+        Macro va_arg - returns one argument and will increment variable used in va_start
+        to next argument in list. Second arg is the type the data returned should be.
+
+        Macro va_end - does cleanup. Must be called before the function returns.
+
+7.4: Formatted Input -- Scanf
+        Scanf - reads characters from standard input, interprets them according to the
+        specification in format, and stores the results through the remaining arguments.
+
+                Supports same formatting as printf.
+
+                int scanf(char* format, ...);
+
+                All the other arguments after format must be a pointer.
+
+                Stops when it exhausts its format string, or when some input fails to
+                match the control specification
+
+                It returns the number of successfully fully matched and assigned input items.
+                On end of file, EOF is returned; this is different from 0, which means that the
+                next input character does not match the first specification in the format string.
+
+                The next call to scanf resumes searching immediatly after the last character
+                already converted.
+
+        sscanf - reads from a string instead of standard input
+                int sscanf(char* string, char* format, arg1, arg2, ...);
+
+                Scans the string accordning to the format in format, and stores
+                the resulting values throuhg arg1, arg2, etc. The arg arguments
+                must be pointers.
+
+        Format string may contain:
+                Blanks or tabs, which are ignored
+
+                Ordianary characters (not %), which are expected to match the next non-white space character
+                of the input stream
+
+                Conversion specifications, consisting of the character %, an optional assignment suppression
+                character *, an optional number specifying a maximum field width, an optional h, l, or L
+                indicating the width of the target, and a conversion character.
+
+        Conversion specification directs the conversion of the next input field.
+
+        The result of a conversion specification is placed in the variable pointed to by the coreresponding
+        argument. If assignment suppression is indicated by the * character, however, the input field is
+        skipped and no assignment is made.
+
+        An input field is defined as a string on on-white space characters; it extends either to the
+        next white space character or until the field width, if specified, is exhausted. this means
+        scanf will read across line boundries since newlines are white space.
+
+        Conversion characters indicates the interpretation of the input field. The corresponding argument
+        must be a pointer.
+
+        Scanf conversion character table
+                d - decimal integer; int *.
+
+                i - integer; int *. The integer may be in octal (leading 0) or
+                hexadecimal (leading 0x or 0X)
+
+                o - octal integer (with or without leading zero); int*
+
+                u - unsigned decimal integer; unsigned int*
+
+                x - hexadecimal integer (with or without leading zero); int *
+
+                c - characters; char *. The next input characters (default 1) are
+                placed at the indicated spot. The normal skip over white space is
+                suppressed; to read the next non-white space character, use %1s
+
+                s - character string (not quoted); char *, pointing to an array of
+                characters large enough for the string and a terminating '\0' that
+                will be added
+
+                e, f, g - floating-point number with optional sign, optional decimal
+                pont and optional exponent; float *
+
+                % - literal %, no assignment is made
+
+        The conversion characters d, i , o, u, and x may be preceded by h to indicate
+        that a pointer to short rather than int appears in the argument list, or by l (letter ell)
+        to indicate that a pointer to long appears in the argument list
+
+        Convesion characters e, f, and g may be preceded by l to indicate that a pointer
+        to double rather than float is in the argument list
+
+        Calls to scanf can be mixed with calls to other input functions. The next call to
+        any input function will begin by reading the first character not read by scanf
+
+        The arguments to scanf and sscanf must be pointers. If they are not, the
+        error will not be detected at compile time
+
+7.5: File Access
+        It is possible to open files that are not connected to a C program via standard input
+        or standard output
+
+        Before a file can read or written to, it has to be opened by the library function fopen.
+        fopen takes an external file name and returns a pointer to the file that can be used
+        in subsequent reads/writes.
+
+        File pointer - points to a structure that contains information about the file, such
+        as the location of a buffer, the current character position in the buffer, whether the
+        file is being read or written, and whether errors or end of file have occured.
+
+        Ex:
+                FILE *fp;
+                FILE *fopen(char* name, char* mode);
+
+                Fp is a pointer to a FILE and fopen returns a opinter to a FILE.
+
+                The first argument to fopen is a string containing the name of the file.
+
+                The second argument is the mode, also a string, which indicates how one intends
+                to use the file.
+                        Allowable modes:
+                                "r" - read
+                                "w" - write
+                                "a" - append
+
+                        For some systems that distinguish between text and binary files; for the latter,
+                        a "b" must be appended to the mode string.
+
+        If a file that does not exist is opened for writing or appending, it is created if possible.
+        
+        Opening an existing file for writing causes the old contents to be discarded, whlle opening for
+        appending preserves them.
+
+        Trying to read a file that does not exist is an error.
+
+        If there is any error when trying to open a file, fopen will return NULL.
+
+        getc - returns the next character from a file or EOF for end of file or error
+                int getc(FILE* fp)
+
+        putc - writes the character c to the file fp and returns the character written, or EOF if
+        an error occurs.
+                int putc(int c, FILE* fp)
+
+        A C program has three file pointers availabile at all times
+                standard input (Keyboard by default)
+                standard output (Screen by default)
+                standard error
+
+                File pointers are stdin, stdout, and stderr
+
+        fscanf / fprintf - identical to scanf and printf, except used to read / write to a file.
+                int fscanf(FILE* fp, char* format, ...)
+                int fprintf(FILE* fp, char *format, ...)
+
+        fclose - breaks connection between the file pointer and the file name used in fopen
+                Frees file pointer for another file
+
+                Most operating systems have some limit on the number of files that a
+                program can have open at once, so its a good idea to free a file
+                once its no longer needed.
+
+                Called for each open file automatically when a program terminates normally
+
+        Ex: cat - concatenate files, print on standard output
+        See example/cat-version-1.c
+
+7.6: Error Handling -- Stderr and Exit
+        Our current cat program is flawed at showing errors. It works if stdout is a screen
+        but not if its outputting to a file.
+
+        stderr - Output stream that appears on the screen even if stdout is redirected.
+
+        See example/cat-version-2.c for example of printing error messages to stderr
+
+        exit function - terminates program execution when called. 
+                exit(int exit_code);
+
+                Can be examined in parent process to tell if sub process failed
+
+                Can be used in all functions
+
+                Same as using return in main function
+
+                Return value of 0 - all is well
+                Return value of nonzero - signal abnormal situations
+
+                Calls fclose on each open output file
+
+        ferror - returns non-zero if an error occured on the stream fp
+                int ferror(FILE* fp);
+
+        feof - returns non-zero if end of ifle has occurred on the specified file
+                int feof(FILE* fp);
+
+7.7: Line Input and Output
+        fgets
+                char* fgets(char* line, int maxliine, FILE* fp);
+
+                reads the next input line (including the newline) from file fp into the
+                character array line; at most maxline-1 characters will be read.
+
+                line will be terminated with '\0'
+
+                returns line. On end of file or error it returns NULL
+
+        fputs
+                int fputs(char* line, FILE* fp)
+
+                Writes a string(which need not contain a newline) to a file
+
+                Returns EOF if an error occurs, and zero otherwise
+
+        gets / puts - similar to fgets and fputs, but operate on stdin and stdout
+                gets deletes terminal '\n' while puts adds its.
+                        What the fuck why, who needs consistency?
+
+7.8: Miscellaneous Functions
+
+7.8.1: String Operations
+        <string.h>
+
+        s and t are char pinters, and c and n are ints
+
+        strcat(s,t) - concatenate t to end of s
+        strncat(s,t,n) - concatenate n characters of t to end of s
+        strcmp(s,t) - return negative, zero, or positive for
+                s < t, s == t, or s > t
+        strncmp(s,t,n) - same as strcmp but only in first n characters
+        strcpy(s,t) - copy t to s
+        strncpy(s,t,n) - same as strcmp but only in first n characters
+        strlen(s) - return length of s
+        strchr(s, c) - return pointer to first c in s, or NULL if not present
+        strrchr(s,c) - return pointer to last c in s, or NULL if not present
+
+7.8.2: Character Class Testing and Conversions
+        <ctype.h>
+
+        c is an int that can be represented as an unsigned char, or EOF.
+        Functions return int
+
+        isalpha(c) - non-zero if c is alphabetic, 0 if not
+        isupper(c) - non-zero if c is upper case, 0 if not
+        islower(c) - non-zero if c is lower case, 0 if not
+        isdigit(c) - non-zero if c is digit, 0 if not
+        isalnum(c) - non-zero if isalpha(c) or isdigit(c), 0 if not
+        isspace(c) - non-zero if c is blank, tab, newline, return, formfeed, vertical tab
+        toupper(c) - return c converted to upper case
+        tolower(c) - return c converted to lower case
+
+7.8.3: Ungetc
+        int ungetc(int c, File* fp)
+
+        Pushes the character c back onto file fp, and returns either c, or EOF for
+        an error. Only one character of pushback is guaranteed per file.
+
+        May be used with any other input functions like scanf, getc, or getchar
+
+7.8.4: Command Execution
+        system(char* s)
+                Executes the command contained in the character string
+                s, then resumes execution of the current program.
+
+                Contents of s depend strongly on the local operating system
+
+                Ex: print date(UNIX)
+                        system("date");
+
+                Returns a system-dependent integer status from the command
+                executed
+
+                In UNIX systems, the status returned is the value returned
+                by exit
+
+7.8.5: Storage Management
+        malloc / colloc - obtain blocks of memory dyamically
+
+        void *malloc(size_t n)
+                Returns a pointer to n bytes of uninitialized storage, or NULL
+                if the request cannot be satisfied
+
+        void *calloc(size_t n, size_t size)
+                Returns a ponter to enough space for an array of n objects of the
+                specified size, or NULL if the request cannot be satisfied
+
+                Storage is initialized to zero
+
+        free(p)
+                Frees the space pointed to by p, where p was originally obtained
+                by a call to malloc or calloc
+
+                No restrictions on the order in which space is freed
+
+                It is an error to free something not obtained by calling
+                calloc or malloc
+
+                It is an error to use something after it has been freed
+
+7.8.6: Mathematical Functions
+        sin(x) - sine of x, x in radians
+        cos(x) - cosine of x, x in radians
+        atan2(y,x) - arctangent of y/x, in radians
+        exp(x) - exponential function e^x
+        log(x) - natural (base e) logarithm of x (x > 0)
+        log10(x) - common (base 10) logarithm of x (x > 0)
+        pow(x,y) - x^y
+        sqrt(x) - square root of x (x >= 0)
+        fabs(x) - absolute value of x
+
+7.8.7: Random Number Generation
+        <stdlib.h>
+
+        rand() - computes a sequence of pseudo-random integers
+        in the range zero to RAND_MAX
+
+        srand(unsigned) - sets the seed for rand

@@ -1,0 +1,237 @@
+01/01/2024
+
+The control-flow statements of a language specify the
+order in which computations are performed
+
+3.1: Statements and Blocks
+        An expression such as
+                x = 0
+                i++
+                printf(...)
+        becomes a statement when it is followed by a semicolon
+
+        The semicolon is a statement terminator
+
+        Braces { and } are used to group declarations and statements
+        together into a compound statement, or block, so they are
+        syntactically equivalent to a single statement
+
+        Ex:
+                Function braces
+                if, else, while, for braces
+
+3.2: If-Else
+        The if-else statement is used to express decisions
+
+        if (expression)
+                statement1
+        else
+                statement2
+
+        Else block is optional
+
+        The expression is evaluated. If it is true(nonzero value),
+        statement1 is executed. If it is false(zero value) and there
+        is an else part, statement2 is executed
+
+        Ex:
+                if (a > b)
+                        z = a;
+                else
+                        z = b;
+
+3.3: Else-If
+        if (expression)
+                statement
+        else if (expression)
+                statement
+        else if (expression)
+                statement
+        else if (expression)
+                statement
+        else
+                statement
+
+
+        Best way to write a multi-way decision.
+        Expressions are evaluated in order.
+
+        If any expression is true, the statement associated with it is
+        executed and the entire chain is ended there.
+
+        The last else part handles the "none or the above" or
+        default case where none of the other coniditions is satisfied.
+        Sometimes there is no action for the default, in this case
+        the else statement can be omitted.
+
+        Example: binary search
+                Decides if a particular value x occurs in the sorted array v.
+                The elements of v must be in increasing order. The function
+                returns the position (a number between 0 and n-1) if x occurs
+                in v, and -1 if not.
+        See example/binsearch.c
+
+3.4: Switch
+        Is a multi-way decision that tests whether an expression matches one of a number
+        of constant integer values, and branches accordingly.
+
+        switch (expression) {
+                case const-expr: statements
+                case const-expr: statements
+                default: statements
+        }
+
+        Each case is labeled by one or more integer-value constants or constant expressions.
+        If a case matches the expression value, execution starts at that case.
+
+        The case labeled default is executed if none of the other cases are satisfied.
+        Default is optional; if it isn't there and if none of the cases match, no action
+        is taken
+
+        Cases and the default clause can occur in any order
+
+        The break statement causes an immediate exit from the switch.
+        Since cases serve just as labels, after the code for one case is done, execution
+        falls trhough to the next uless you take explicit action to esacpe.
+
+        You can get out of a switch with return or break.
+
+        Break statements can be used to force exits from while, for, and do loops
+
+        Use falling through sparingly, as it can make it hard to follow 
+
+01/02/2024
+
+3.5: Loops -- While and For
+        while (expression)
+                statement
+
+        The expression is evaluated. If it is non-zero, statement is executed and expression
+        is re-evaluated. This cycle continues until expression becomes zero, at which point execution
+        resumes after statement.
+
+        The for statement
+
+                for (expr1; expr2; expr3;)
+                        statement
+
+        is equivalent to
+
+                expr1;
+                while (expr2) {
+                        statement
+                        expr3
+                }
+
+        except for the behavior of continue
+
+        The three components of a foor loop are expressions. Most commongly, Expr1
+        and expr3 are assignments or function calls and expr2 is a
+        relational expression.
+
+        Any of the three parts can be ommitted, although the semicolons must remain.
+
+        If expr1 or expr3 is ommited, it is simply dropped from the expansion
+
+        If the test, expr2, is not present, it is taken as permanetly true
+
+        for (;;) {
+
+        }
+
+        is an "infinite" loop, and is broken by other means, such as a break or return
+
+        Using a while or for loop is personal preference
+
+        When there is no initialization or re-initialization, while is most natural
+
+        When there is simple initialization and incrementing of the value the for
+        loop is preferable
+
+        Example: atoi - converts string to numeric equivalent
+                skip white space, if any
+                get sign, if any
+                get integer part and convert it
+
+        See example/atoi.c
+
+        Example - shellsort
+                In early stages, far-aprt elements are compared,
+                rather than adjacent ones as in other sorts. This
+                tends to eliminate large amounts of disorder quickly,
+                so later stages have less work to do. The interval between
+                elements is gradually decreased to one, at which point the
+                sort effectively becomes an adajacent interchange method
+        See example/shellsort.c
+
+        Comma "," operator
+                Most often used in for loops.
+
+                A pair of expressions seperated by a comma is evaluated left to right,
+                and the type and value of the of the result are the type and value of the right
+                operand
+
+        Example - reverse string method
+        See example/reverse.c
+
+        The commas that seperate function arguments, variables in declarations, etc are not comma operators
+        and do not guarantee left to right evaluation
+
+        Comma operators should be used sparingly. The most sutiable uses
+        are for constructs strongly related to each other
+                Ex: for loop in reverse
+                Ex: Macros where a multistep computation has to be a single expression
+
+3.6: Loops -- Do-While
+
+        Tests the termination at the bottom of the loop after running
+        the loop body at least once
+
+        do
+                statement
+        while (expression);
+
+        The statement is executed, then expression if evaluated. If it is true,
+        statement is evaluated. Otherwise it continues on to the next line
+
+        Example - itoa - convert n to characters in s
+        
+        See example/itoa.c
+
+3.7: Break and Continue
+        Sometimes it is convenient to be able to exit from a loop other
+        than by testing at the top or bootm.
+
+        break - early exit from for, while, and do
+                Causes the innermost enclosing loop or switch to be exited immediatly
+
+        Ex: trim - removes trailing blanks, tabs, and newlines */
+        
+        See example/trim.c
+
+        continue = causes the next iteration of the for, while, or do loop to begin
+
+3.8: Goto and Labels
+
+        goto - goes to a section of code that is under a label
+
+        Labels have the same form as a variable name, and is followed by
+        a colon. It can be attached to any statement in the same function as the
+        goto. The scope of the label is the entire function
+
+        Rarely used, doesn't need to be usually and can really
+        make code hard to understand since its jumping around
+        and breaks sequential nature of code.
+
+        Can be used to break out of many nested loops since break would
+        only get out of the current loop it is used in.
+        Ex:
+                for (...)
+                        for (...) {
+                                if (disaster)
+                                        goto error;
+                        }
+                ...
+
+                error:
+                        clean up the mess

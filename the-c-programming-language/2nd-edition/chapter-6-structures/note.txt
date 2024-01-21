@@ -1,0 +1,279 @@
+01/14/2024
+
+Structure - a collection of one or more variables, possibly
+of different types, grouped together under a single name for convenient
+handling
+
+6.1: Basics of Structures
+        Ex: Point in graphics
+                x and y coordinate, both integers
+
+                struct point {
+                        int x;
+                        int y;
+                }
+
+        struct keyword introduces a structure declaration, which is
+        a list of declarations enclosed in braces.
+
+        A stucture name (struct tag) is optional and is followed
+        by the struct keyword.
+
+        The variables named in a structure are called members.
+
+        A struct declaration defines a type. The right brace
+        that terminates the list of members may be followed by
+        a list of variables
+
+                struct { ... } x, y, z;
+
+        If a structure declaration is tagged, the tag can be
+        used later in definitions of instances of the structure
+
+                struct point pt;
+
+        A structure can be initialized by following its definition
+        with a lost initializers, each a constant expression
+
+                struct point maxpt = { 320, 200 };
+
+        A member of a particular structure is referred to in an expression by
+        the following
+
+                structure-name.member
+
+                Ex:
+                        printf("%d,"%d", pt.x, pt.y);
+
+        Structures can be nested.
+                Ex:
+                        struct rect {
+                                struct point p1;
+                                struct point p2;
+                        }
+
+6.2: Structures and Functions
+        Legal operations of a structure
+                Copying / assigning to it as a unit
+                        Includes passing arguments to functions
+                        and returning from functions
+
+                Take address with &
+
+                Accessing its members
+
+        Structures cannot be compared
+
+        When large functions might be copied to a
+        function, it may be better to use a structure
+        pointer.
+
+        Structure pointers behave the same way as regular pointers
+                Ex: 
+                        struct point *pp;
+
+                        (*pp).x and (*pp).y are
+                        the pointer values of x and y
+                        respectively.
+
+                        The parenthesis are needed since the structure
+                        operator . has a higher precedance than *.
+
+        Alternative syntax to get values of pointer structure members
+                p -> member-of-structure
+
+                Equivalent to (*pp).member-of-structure
+
+                -> has some of the highest precedence in the lanaguage
+                itself.
+
+6.3: Arrays of Structures
+        Ex - A program to count the occurrences of each C keyword.
+
+        We could use an array of character stirngs to hold the names,
+        and an array of integers for the counts.
+
+        There is one other way to do this, and its a structure of arrays
+
+        Ex:
+                struct key {
+                        char *word;
+                        int count;
+                }
+
+                struct key keytab[NKEYS];
+
+        Arrays of structures can be initialized like all other
+        arrays.
+                Ex:
+                        struct key keytab[NKEYS] = {
+                                "auto", 0,
+                                "break", 0,
+                                "case", 0,
+                                "char", 0,
+                                "const", 0,
+                                "continue", 0,
+                                "default", 0,
+                                "unsigned", 0,
+                                "void", 0,
+                                "volatile", 0,
+                                "while", 0,
+                        };
+        The initializers are listed in pairs corresponding to
+        the structure members. The pairs can be enclosed in
+        braces to make it more clear.
+
+        The main issue is the quantity NKEYS, or the number of items
+        in the keytab array. It could be static but there is a better way
+        to do it.
+
+        sizeof - compile-time unary operator that can be used to compute the
+        size of any object.
+                Ex:
+                        sizeof object
+
+                        sizeof(type name)
+
+        sizeof returns an integer equal to the size of the specified object or type
+        in bytes.
+
+        So we can take the size of the keytab array divided by the size of the key struct
+        to get the total number of elements in the array
+
+                #define NKEYS (sizeof keytab / sizeof keytab[0])
+
+        sizeof can not be used in a #if line, since the preproefcssor does not parse type names.
+        The expression is legal since #define is not evaluated by the preprocessor
+
+6.4: Pointers to Structures
+        If p is a pointer to a structure, arithmetic on p takes into account the
+        size of the structure, so p++ increments p by the correct amount to get the
+        next element of the array of structures.
+
+        The size of a structure is not always the sum of the sizes of its members.
+        Because of alignment requirements for different objects, there may be unamed
+        "holes" in a structure
+
+        Ex:
+                struct {
+                        char c;
+                        int i;
+                };
+
+        might require eight bytes, not five.
+        The sizeof operator returns the proper value.
+
+6.7: Typedef
+        typedef keyword - used for creating new data type names
+
+        Ex:
+                typedef int Length;
+
+                makes the name Length a synonym for int.
+
+                Length can be used in declarations, casts, etc.
+                in the same ways int can be.
+
+                        Length len, maxlen;
+                        Length *lengths[];
+
+        Ex:
+                typedef char* String;
+
+                Creates String as a synonym for char*
+
+        Ex:
+                typedef struct tnode* Treeptr;
+
+                typedef struct tnode {
+                        char *word;
+                        int count;
+                        Treeptr left;
+                        Treeptr right;
+                } Treenode;
+
+                Creates Treeptr as a synonym for tnode*
+                and Treenode as a synonym for struct tnode
+
+        typedef does not create new types; it merely adds
+        a new name for some existing type. Variables declared
+        this way have exactly the same properties as variables whose
+        declarations are spelled out explicitly.
+
+        Two reasons to use them:
+                Parameterize a program against portability problems.
+                If typedefs are used for data types that may be machine-dependent,
+                only the typedefs need change when the program is moved.
+                        Ex: size_t and ptrdiff_t can be short, int, and long
+                        depending on the host machine
+
+                Provide better documentation for a program. Typedef names
+                might be easier to understand if the type itself is
+                hard to understand
+
+6.8: Unions
+        A variable that may hold (at different times) objects of different types
+        and zies, with the compiler keeping track of size and alignment requirements.
+
+        Provide a way to manipulate different kinds of ata in a single area of storage,
+        without embedding any machine-dependent information in the program.
+
+        Ex:
+                union u_tag {
+                        int ival;
+                        float fval;
+                        char *sval;
+                } u;
+
+                The variable u will be large enough to hold the largest of the three
+                types. This is implementation-dependent. 
+
+                Any one of these types may be assigned to u and ehtne used in expressions
+                as long as the usage is consistent: the type retrieved must be the type
+                most recently stored.
+
+        It is the programmers responsiblity to keep track of which type is currently
+        stored in a union.
+
+        The results are implementation dependent if something is stored as one type and
+        extracted as another.
+
+        Union variable syntax (Same as structures):
+                union-name.member
+
+                union-pointer->member
+
+        Unions may occur within structures and arrays, and vice versa.
+
+        Operations permitted on unions:
+                Assignment to or copying as a unit
+
+                Taking the address
+
+                Accessing a member
+
+        A union may only be initialized with a value of the type of its first
+        member. In the example above, that would be int.
+
+        Unions can be used to force a variable to be aligned on a particular
+        kind of storage boundary.
+                See chapter 8s storage allocator
+
+6.9: Bit-fields
+        When storage space is expensive, it may be necessary to pack several objects
+        into a single machine word. The most common use is a set of single-bit flags
+        in applications like compiler symbol tables.
+
+        Externally-imposed data formats, such as interfaces to hardware devices,
+        may require this as well.
+
+        Ex: encoding information as one-bit flags in a single char or int
+                #define KEYWORD 01
+                #define EXTERNAL 02
+                #define STATIC 04
+
+                flags |= EXTERNAL | STATIC - Turns flags on
+
+                flags &= ~(EXTERNAL | STATIC) - Turns flags off
+
+                if ((flags & (EXTERNAL | STATIC)) == 0) - True if both bits are off

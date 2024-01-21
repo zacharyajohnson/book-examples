@@ -1,0 +1,525 @@
+12/31/2023
+
+2.1: Variable Names
+
+        The names of variables and symoblic constants have restrictions on them
+
+        Names are made up of letters and digits. The first character must be a letter.
+        The underscore "_" counts as a letter, and can be used to improve readability of long variable
+        names. Upper case and lower case letters are distinct, so x and X are two different variable names.
+
+        Traditional C naming conventions says to use lower case for variable names, and upper case for
+        symbolic constants.
+
+        The first 31 characters of an internal name are significant
+
+        Function names and external variables may have less then 31 significant characters depending on the environment
+        External variables and function names are garaunted
+        by the ANSI standard to allow at least 6 significant characters with a single case.
+
+
+        Keywords like if, else, float, and int are reserved,
+        and can't be used for variable names. They must be in lower case.
+
+        Shorter names tend to be for local variables, while long names are used
+        for external variables.
+
+2.2: Data Types and Sizes
+
+        The data types in C are
+
+            char        a single byte, capable of holding one
+                        character in the local character set.
+
+            int         an integer, typically reflecting the natural size
+                        of integers on the host machine.
+
+            float       single-precision floating point.
+
+            double      double-precision floating point.
+
+
+        There are a variety of qualifiers that can be applied to these types.
+        short and long apply to integers:
+
+            short int sh;
+            long int counter;
+
+        The word int can be omitted in these declarations, and usually is.
+        long and short provide different lengths of integers, where practical. ints
+        will be the natural size for a particular machine. Short is 16 bits, long 32 bits,
+        and int either 16 or 32 bits. Each compiler is free to choose appropriate sizes for
+        its own hardware, only restricted by ints and shorts being at least 16 bits and
+        longs are at least 32 bits. Shorts can't be any longer then int, and ints
+        can't be any longer then longs.
+
+        The qualifiers signed and unsigned can be applied to chars or any integer.
+        unsigned numbers are always positive or zero. Signed numbers allow negative values.
+        Chars can be unsigned or signed depending on the machine implementation, but printable
+        characters are always positive.
+
+        The type long double specifies extended precision floating point. Like integers, the size
+        of float, double, and long double are vary by implementation.
+
+        The headers <limits.h> and <float.h> contain symbolic constants for all the sizes, along 
+        with the properties of the machine and compiler. See more info in Appendix B.
+
+2.3: Constants
+
+        An integer constant like 1234 is an int.
+
+        A long constant is written with an l (ell) or L, as in 123456789L.
+        An integer too big to fit into an int will be taken as a long.
+
+        Unsigned constants are written with a u or U, and the suffix ul or UL 
+        is an unsigned long.
+
+        Floating point constants contain a decimal point (123.4) or an exponent (1e-2) or both.
+        Their type is double, unless specified. The suffex f or F indicate a float constant,
+        while l or L indicate a long double.
+
+        The value of an integer can be specified in octal or hexidecimal. A leading 0 
+        specifies an octal, and a leading 0x or 0X specifies hexidecimal. For example
+        decimal 31 can be written as 037 in octal and 0xf or 0XF in hexidecimal.
+        Ocal and hexidecimal constants may be followed L to make them long and
+        U to make them unsigned. OXFUL is an unsigned long constant with a
+        value of 15 decimal 
+
+
+
+        A character constant is an integer, written as one character
+        within single quotes, such as 'x'. The value of a character constant
+        is the numeric value of the character in the machines character set.
+        For example, the character constant '0' has a value of 48, which is unrelated
+        the numeric value of 0. If we write '0' instead of 48, which depends on the character set,
+        the program is independent of particular value and easier to read. Characters can
+        be used in numeric operators, but are typically compared with each other.
+
+        Certain characters can be represented in character and string constants by escape sequences like \n (newline)
+        These sequences look like two characters, but only represent one. An arbitrary byte sized bit pattern can be specified
+        by 
+
+            '\ooo'
+
+        where o is one to three ocatal digits (0-7) or by
+
+            '\xhh'
+
+        where hh is one or more hexidecimal digits (0....9, a....f, A....F)
+
+        For example
+
+            #define VTAB '\013' /* Ascii Vertical Tab */
+            #define VTAB '\xb' /* ASCII Vertical Tab */
+
+
+        The complete set of esacpe sequences is
+
+            \a          alert (bell) character
+            \b          backspace
+            \f          formfeed
+            \n          newline
+            \r          carriage return
+            \t          horizontal tab
+            \v          vertical tab
+            \\          backslash
+            \?          question mark
+            \'          single quote
+            \"          double quote
+            \ooo        octal number
+            \xhh        hexidecimal number
+
+        The character constant '\0' represents the character with value zero, the null character
+        '\0' is written to emphasize the character nature of some expression, but the numeric value itself is zero.
+
+
+        A constant expression is an expression that involves only constants. Such expressions can be evaluated at 
+        compile time rather than run time, and can be used in any place a constant can occur, such as
+
+            #define MAXLINE 1000
+            char line[MAXLINE + 1]
+
+
+        A string constant or string literal is a sequence of zero or more characters surrounded by double quotes
+
+            "I am a string" or ""
+
+        The quotes are not part of the string, and are only there for delimination.
+        The same escape sequences for char apply to strings.
+
+        String constants can be concatenated at compile time so
+         
+           "hello," " world"
+
+        is the same as 
+
+            "hello, world"
+
+        This is useful for splitting long strings across multiple lines.
+
+        Under the hood, a string constant is an array of characters. This means it
+        has a null character '\0' at the end, to deliminate the end of it. The physical
+        storage required is the length of the string + the null character.
+        This allows a string to be as long as needed, however, to get the length
+        of a string, programs must scan it completly until '/0' is encountered 
+
+        The STD function strlen(s) returns the length of its character string argument
+        s, excluding the '\0' character. 
+
+        See example/strlen.c
+
+        strlen and other string functions are declared in <string.h>
+
+
+        An enumeration constant is a list of constant integer values
+
+            enum boolean { NO, YES };
+
+        The first name in the enum has a value of zero, the next 1, etc unless explicit
+        values are specified.
+
+            enum escapes { BELL = '\a', BACKSPACE = '\b', TAB = '\t',
+                           NEWLINE = '\n', VTAB = '\v', RETURN = '\r' };
+
+        If not all values are specified, unspecified values continue the progression
+        from the last specified value
+
+            enum months { JAN = 1, FEB, MAR, APR, MAY, JUN,
+                          JUL, AUG, SEP, OCT, NOV, DEC };
+                                /* FEB is 2, MAR is 3, etc. */
+
+        Names in different enumerations must be distinct. Values don't need to be distinct
+        in the same enumeration.
+
+2.4: Declarations
+
+        All variables must be declared before use. 
+        A declaration specifies a type, and contains a list of
+        of one or more variables of that type
+
+            int lower, upper, step;
+            char c, line[1000];
+
+        Variables can be distributed among declarations in any fashion;
+        the lists above could be written as 
+
+            int lower;
+            int upper;
+            int step;
+            char c;
+            char line[1000];
+
+        A variable may be intialized in its declaration. If the name
+        is followed by an equals sign and expression, the expression
+        serves as its intializer
+
+            char esc = '\\';
+            int i = 0;
+            int limit = MAXLINE + 1;
+            float eps = 1.0e-5;
+
+        If a variable is not automatic, the intialization is done once only,
+        conceptually before the program starts executing, and the intializer
+        must be a constant expression.
+
+        An explicitly intialized automatic variable is initialized each
+        time the function or block is entered. The intializer can be
+        any expression
+
+        External and static variables are intialized to zero by default.
+        Automatic variables for which there is no explicit intializer
+        have undefined (garbage) values.
+
+
+        The const qualifier can be applied to any declaration of a variable to
+        specify that its value will not be changed. For an array, const
+        says that the elements of the array will not be altered.
+
+            const double e = 2.718;
+            const char msg[] = "warning: "; 
+
+        The const qualifier can be used with array arguments, to indicate that
+        the function does not change the array.
+
+            int strlen(const char[]);
+
+        The result is implementation defined if an attempt is made to change a const.
+
+2.5: Arithmetic Operators
+
+        The binary arithmetic operators +, -, *, /, and the modulus operator %.
+        Integer division truncates any fractional part. The expression
+
+            x % y;
+
+        produces the remainder when x is divided by y, and returns 0 when
+        y divides x exactly. The % operator cannot be applied to floats or doubles.
+
+        The direction of truncation for / and the sign of the result of % for negative operands
+        are machine dependent.
+
+        The action taken on overflow / underflow is machine dependent
+
+2.6: Relational and Logical Operators
+
+        The relational operators are
+
+            >  >=  <  <=
+
+        They all have the same precedence. Just below
+        them in precedence are the equality operators
+
+            ==  !=
+
+        Relational operators have lower precedence than arithmetic operators, so
+        an expression like  i < lim - 1 is taken as i < (lim - 1).
+
+
+        The logical operators are && and ||. Expressions connected
+        by && or || are evaluated left to right, and evaluation
+        stops as soon as the truth or falsehood of a result is known.
+        For example, here is the getline function written in Chapter 1: 
+
+            for (i = 0; i < lim - 1 && (c = getchar()) != '\n' && c != EOF; ++i)
+                    s[i] = 0;
+
+        The precedence of && is higher than ||. Logical operators
+        have lower precedence than the relational and equality operators
+
+        The numeric value of a relational or logical expression is 1 if
+        the relation is true, and 0 if the relation is false.
+
+        The uniary negation operator ! converts a non zero operand into 0,
+        and a zero operand into 1. This has the effect
+
+            if (!valid)
+
+        as negating an expression. So for the example above, it could be read
+        as "if not valid"
+
+2.7: Type Conversions
+
+        When an operator has two operators of different types, they are converted to a common
+        type based on a set of rules
+
+        Automatic conversion are always converting a "narrower"(Less size) to one that
+        is "wider"(more size) since it won't lose any data doing this.
+
+        Conversions that might lose data, such as converting a float to an int will throw
+        a warning, but they are not illegal
+
+        Chars are integers under the hood so they may be used in arithmetic expressions. This
+        allows flexibility in certain character transformations
+
+        Ex: atoi - converts a string of digits into its numeric equivalent.
+        See example/atoi.c
+
+        The C language spec does not specify if chars are unsigned or signed integers. When
+        converting to an integer the result will be machine dependent. The spec does guaruntee
+        that any character in the machines printing char set will never be negative. If you are
+        storing non char data into a char use signed or unsigned for portability.
+
+        Relational expressions like i > j and logical expressions connected by && and ||
+        have value 1 if true and 0 if false
+
+        Functions may return any non-zero value for true, as the tests in if, while, for, etc
+        "true" means "non-zero".
+
+        Implicit arithmetic conversions always promote the operand of "lower" type to the "higher"
+        type to match the other operand. The result of this is the higher type.
+
+        Conversion rules when no unsigned types:
+                If either operand is long double, convert the other to long double
+
+                Otherwise, if either operand is double, convert the other to double
+
+                Otherwise if either operand is float, convert the other to float
+
+                Othersive, convert char and short to int
+
+                Then if either operand is long, conver the other to long
+
+        Conversions are more complicated when unsigned types are involved
+
+        Explicit type conversions can be forced ("coerced") in an expression,
+        with a unary operator called a cast
+
+                (type-name) expression
+       
+        the expression is converted to the named type by the conversion rules. The cast
+        acts as if the expression was assigned to a variable of type type-name.
+
+        Ex: sqrt((double) n)
+
+        Note that the original variables in a cast are not altered.
+
+        If arguments are declared by a function prototype, the declaration causes
+        automatic coercion of any arugments when the function is called
+
+        Ex: double sqrt(double) 
+            root2 = sqrt(2)
+
+        Will convert the interger 2 into the double value 2.0 without any need for a cast.
+
+2.8: Increment and Decrement Operators
+
+        Two operators for incrementing and decrementing variables
+
+        ++: Add one to its operand
+
+        --: Subtract one from its operand
+
+        Ex:
+                if (c == '\n')
+                        ++nl;
+
+        Can be used as a prefix(++x) or posfix(x++) operator.
+        ++x increments before its value is used.
+        x++ increments after its value is used.
+
+        Ex: If n is 5
+                x = n++; // Set x to 5
+                x = ++n; // Set x to 6
+
+                In both cases n becomes 6
+
+        Both of these can only be applied to variables
+        Ex: (i+j)++ is illegal
+
+        Ex: squeeze(s,c) - removes all occurrences of the char c from string s
+        See example/squeeze.c
+
+        In squeeze, the chars that don't match char c is copied over using the j
+        variable
+
+        Ex: strcat(s,t) - Concatenates the string t to the end of string s.
+        Strcat assumes that there is enough space in s to hold the combination
+
+        See example/strcat.c
+
+        As each character is copied from t to s, the postfix ++ is applied to both i and j to make
+        sure that they are in position for the next pass through the loop
+
+01/01/2024
+
+2.9: Bitwise Operators
+
+        Six operators for bit manipulation
+                &: Bitwise AND
+                |: Bitwise OR
+                ^: Bitwise Exclusive OR
+                <<: Left Shift
+                >>: Right Shift
+                ~: one's complement (unary)
+
+        Can only be used on integral operands:
+                char
+                short
+                int
+                long
+                Both signed and unsigned versions
+
+        Bitwise AND - used to mask off some set of bits
+        Ex: n = n & 01777
+
+        Bitwise OR - Used to turn bits on
+        Ex: x = x | SET_ON;
+                Sets to one in x the bits that are set to one in SET_ON
+
+        The bitwise exclusive OR operator sets a one in each bit position where its
+        operands have different bbits, and zero where they are the same.
+
+        Bitwise | and bitwise & are different than the logical operators && and ||
+        
+        Ex: x = 1, y = 2
+                x & y = 0
+                x && y = 1
+
+        Shift operators << an >> perform left and right shifts of their left
+        operand by the number of bit positions given by the right operand, which
+        must be positive
+
+        Ex: x << 2
+                Shifts the value of x left by two positions, filling vacated bits with zeros
+                Equivalent to multiplcation by 4.
+
+
+        Right shifting a signed quantity always fills vacated bits with zero.
+
+        Right shifting a signed quantity will fill with sign bits ("arithmetic shift")
+        on some machines and with 0-bits("logical shift") on others.
+
+        The unary operator ~ yields the one's complment of an integer; that is it
+        converts each 1-bit into a 0-bit and vice versa
+        
+        Ex: x = x & ~077
+                Sets the last six bits of x to zero.
+
+        Function getbits(x,p,n) - returns the (right adjusted) n-bit field of x that
+        begins at position p. 
+                Assume that bit position 0 is at the right end and that n and p are
+                sensibile positive values
+
+        Ex: getbits(x,4,3) returns the three bits in bit positions 4, 3, 2 right adjusted
+
+        See example/getbits.c
+
+2.10: Assignment Operators and Expressions
+
+        Expressions such as
+
+                i = i + 2
+        
+        in which the variable on the left hand side is repeated immediately on
+        the right can be written in the compressed form
+
+                1 += 2
+
+        += is called the assignment operator
+        
+        Most binary operators have a corresponding assignment
+        operator
+                +, -, *, /, %, <<, >>, &, ^, |
+
+        Ex: x *= y + 1 means x = x * (y + 1)
+        
+        Ex: bitcount - counts the number of 1-bits in the integer argument
+        See example/bitcount.c
+
+        Declaring x to be unsigned ensures that when it is right-shifted, vacated
+        bits will be filled zeros, not sign bits, regardless of the machine the program
+        is run on
+
+        The assignment statement has a value and can occur in expressions
+        
+        Ex: while ((c = getchar()) != EOF)
+
+        The type of an assignment expression is the type of its left operand
+        and the value is the value after the assignment
+
+2.11: Conditional Expressions
+
+        The statements
+
+                if ( a > b)
+                        z = a;
+                else
+                        z = b;
+
+        compute in z the maximum of a and b.
+
+        The conditional expression, written with the ternary operator "?:", provides an
+        alternative way to write this
+
+        The expression
+
+                expr1 > expr2 : expr3
+
+        the expression expr1 is evaluated first. If it is non-zero(true) then the expression
+        expr2 is evaluted and that is the value of the conditional expression. Otherwise
+        expr3 is evaluated and that is the expression
+
+        Ex: z = (a > b) ? a : b;
+
+        If expr2 and expr3 are different types, the type of the result is determined by the conversion
+        rules discussed earlier in the chapter.
