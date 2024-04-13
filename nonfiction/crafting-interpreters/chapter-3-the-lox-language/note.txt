@@ -1,0 +1,386 @@
+04/13/2024
+
+3.1: Hello, Lox
+        See example/hello-world.lox
+
+        Syntax is part of C family
+
+        // - comment
+
+3.2: A High-Level Language
+        Lox resembles most like JavaScript,
+        and handles scoping closely to how Scheme
+        does
+
+        3.2.1: Dynamic Typing
+                Lox is dynamically typed.
+
+                Variables can store values of any type, and a single
+                variable can store values of different types at
+                different times
+
+                Any errors, such as trying to divide a number by a string,
+                is detected at runtime
+
+                Easier to implement than static typing
+
+        3.2.2: Automatic memory management
+                Manual memory management takes more time and is more
+                error prone
+
+                Two types of memory management:
+                        Reference counting
+                        Tracing garbage collection(GC)
+
+                Reference counting is easier, but has more limitations
+                Lox will use a GC
+
+3.3: Data Types
+        Booleans - values of true and false
+
+        Numbers - Lox has one kind. double-precision floating point
+                Ex: 1234, 12.34
+
+        Strings
+                Ex: "I am a string"
+
+        Nil - represents "no value". Also called null
+
+3.4: Expressions
+        Evaluates to some value
+
+        3.4.1: Arithmetic
+                Multiplication
+                Division
+                Addition
+                Subtraction
+
+                Made up of an operator and operands
+
+                Since these take two operands, they are
+                called binary operators
+
+                - can be used as a prefix to make an operand
+                negative
+
+                + can be used to concatinate two strings together
+
+        3.4.2: Comparison and Equality
+                Return a Boolean result
+
+                Compare numbers using:
+                        less than (<)
+                        less than or equal(<=)
+                        greater than(>)
+                        greater than or equal(>=)
+
+                Test values for equality or inequality:
+                        1 == 2(false)
+                        "cat" != "dog"(true)
+                        314 == "pi"(false, different types are never equal)
+                        123 == "123"(false)
+
+        3.4.3: Logical Operators
+                ! prefix returns false if the operand is true, and vice
+                versa
+                        Ex: !true // false
+
+                And expression
+                        Ex: true and false; // false
+                            true and true; // true
+
+                Or expression
+                        Ex: false or false; // false
+                            true or false; // true
+
+                And and or expressions short-circuit
+
+        3.4.4: Precedence and Grouping
+                Same as C, minus things like bitwise, shift, modulo,
+                or conditional expressions
+
+                Can use () to override precedence
+
+3.5: Statements
+        Produce an effect, instead of evaluating to a value like
+        an expression
+
+        Modify some state, reading input, or producing output
+                Ex: print "Hello, World!"
+
+                Evaluates a single expression and displays the results
+                to the user
+
+        Expression statement - an expression followed by a ;, promotes
+        the expression to a statement
+
+        Can be grouped together in blocks
+                Ex: {
+                        print "One statement.";
+                        print "Two statements.";
+                    }
+
+        Blocks also affect scoping
+
+3.6: Variables
+        Declared using var statements. If not initialized, the
+        default value is nil
+                Ex: var imAVariable = "here is my value";
+                    var iAmVil;
+
+        Once declared, you can access and assign a variable using its name
+                Ex: var breakfast = "bagels";
+                    print breakfast;
+                    breakfast = "beignets";
+                    print breakfast;
+
+3.7: Control Flow
+        if statement
+                Ex: if (condition) {
+                        print "yes";
+                    } else {
+                        print "no";
+                    }
+
+        while loop
+                Ex: var a = 1;
+                while (a < 10) {
+                        print a;
+                        a = a + 1;
+                }
+
+        for loop
+                Ex: for (var a = 1; a < 10; a = a + 1) {
+                        print a;
+                    }
+
+        Does not inclue for-in or foreach loop
+
+3.8: Functions
+        Ex: makeBreakfast(bacon, eggs, toast)
+            makeBreakfast()
+
+        Parentheses are mandatory. If they are left
+        out, it is just refered to.
+
+        Defining a function:
+                Ex: fun printSum(a, b) {
+                        print a + b;
+                    }
+
+        Argument - the actual value passed to a function when it
+        is called. A function call has an argument list
+
+        Parameter - the variable that holds the value of the argument
+        inside the body of the function. A function declaration has
+        a parameter list.
+
+        Body of a function is always a block.
+
+        Can return a value using the return statement
+                Ex: fun returnSum(a, b) {
+                        return a + b;
+                    }
+        If execution reaches the end of the block without finding a return,
+        it implicitly returns nil
+
+        Are first class, can be referenced and store in variables, passed around, etc
+
+        3.8.1: Closures
+                Ex:
+                        fun addPair(a, b) {
+                                return a + b;
+                        }
+
+                        fun identity(a) {
+                                return a;
+                        }
+
+                        print identity(addPair)(1, 2); // Prints "3".
+
+                Function declarations are statements, and can be declared inside
+                other functions
+
+                Ex: An inner function references a var outside its scope
+                        fun returnFunction() {
+                                var outside = "outside";
+
+                                fun inner() {
+                                        print outside;
+                                }
+
+                                return inner;
+                        }
+
+                        var fn = returnFunction();
+                        fn();
+
+                Scoping is borrowed from Lisp
+
+                Closures - A function that "holds  on" to references to any surrounding
+                variables that it uses so that they stay around even after the outer function
+                is returend.
+
+                Adds complexity because we can no longer assume that variable scope ends at
+                the end of a function
+
+3.9: Classes
+        3.9.1: Why Might Any Language be Object Oriented?
+                Useful for defining compound data types to bundle other
+                data types together
+
+                Useful for dynamically typed langauges
+
+                Useful for bundling functions so we don't have to
+                prefix functions with the type of object they operate
+                on
+
+        3.9.2: Why is Lox Object Oriented?
+                Its a wide spread paradigm and is useful to cover an
+                implementaiton
+
+        3.9.3: Classes or Prototypes
+                Two approaches to objects:
+                        Classes
+                        Prototypes
+
+                Class based languages:
+                        Instances
+                                Store the state for each object and have
+                                a reference to the instances class
+                        Class
+                                Contain the methods and inheritance chain
+
+                        To call a method on an instance, there is always a level
+                        of indirection. You look up the instance's class and then you
+                        find the method there.
+
+                        see image/class.png
+
+                Prototype based languages:
+                        Merge classes and instances into one
+
+                        There are only objects, no classes
+
+                        Each object may contain state and methods
+
+                        Objects can directly inherit from each other(delegate to)
+
+                        More flexiable and easier to implement
+
+                        see image/prototype.png
+
+                Lox will be class based
+
+        3.9.4: Classes in Lox
+                Ex: Declaring a class and its methods
+
+                        class Breakfast {
+                                cook() {
+                                        print "Eggs a-fryin'!";
+                                }
+
+                                serve(who) {
+                                        print "Enjoy your breakfast, " + who + ".";
+                                }
+                        }
+
+                When a class declaration is executed, Lox creates a class object and
+                stores that in a variable named after the class
+
+                Ex: Classes are first class in Lox
+
+                        // Store it in variables.
+                        var someVariable = Breakfast;
+
+                        // Pass it to functions.
+                        someFunction(Breakfast);
+
+                Ex: Creating a new instance
+
+                        var breakfast = Breakfast();
+                        print breakfast; // "Breakfast instance".
+
+                In Lox, the class itself is a factory function for instances.
+                Can be called just like a function
+
+        3.9.5: Instantiation and Initialization
+                Ex: Lox allows properties to be added to objects
+                        breakfast.meat = "sausage";
+                        breakfast.bread = "sourdough";
+
+                Assigning to a field creates it if it doesn't already exist
+
+                If you want to access a field or a method on the current object from within
+                a method, you can use this
+                        Ex: 
+                                class Breakfast {
+                                        serve(who) {
+                                                print "Enjoy your " + this.meat + " and " +
+                                                this.bread + ", " + who + ".";
+                                        }
+                                // ...
+                                }
+
+                Data can be intialized during object construction by defining an initializer
+                method call init. If a class has the init function declared it will automatically
+                be used when the object is constructed. Any parameters based to the class are
+                forwarded to its initializer
+                        Ex:
+                                class Breakfast {
+                                        init(meat, bread) {
+                                                this.meat = meat;
+                                                this.bread = bread;
+                                        }
+
+                                // ...
+                                }
+
+                                var baconAndToast = Breakfast("bacon", "toast");
+                                baconAndToast.serve("Dear Reader");
+
+        3.9.6: Inheritance
+                Lox supports single inheritance, or inheriting data / behavior from
+                one parent class
+
+                Can be specified when making a class with the < operator
+                        Ex: Brunch being a subclass of Breakfast
+
+                        class Brunch < Breakfast {
+                                drink() {
+                                        print "How about a Bloody Mary?";
+                                }
+                        }
+
+                Every method defined in the superclass is also available to its subclass
+                        Ex:
+                                var benedict = Brunch("ham", "English muffin");
+                                benedict.serve("Noble Reader");
+
+                A superclasses init method also gets inherited. It must be called
+                in each subclass that has an init method. This can be done via the
+                super keyword
+                        Ex:
+
+                                class Brunch < Breakfast {
+                                        init(meat, bread, drink) {
+                                                super.init(meat, bread);
+                                                this.drink = drink;
+                                        }
+                                }
+
+                Lox is not a pure OOP langauge, as everything has to be an object.
+                Lox does not does this for primitives(no methods or properties)
+
+3.10: The Standard Library
+        Will be very bare bones
+
+        Will include print statement and the clock() method to measure preformance
+
+        A real standard library would have things for:
+                String manipulation
+                Trigonometric functions
+                File I/O
+                Reading user input
+
+        Isn't need for book so it won't be included
