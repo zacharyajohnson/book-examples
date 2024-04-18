@@ -1,0 +1,20 @@
+04/17/2024
+
+Not much notes, as this is a practical section.
+See example/scanner for the implementation
+
+Lexeme - the smallest unit of characters grouped together
+that represent something
+        Ex: var language = "lox";
+        Each word / symbol means something in the langauge
+        and are lexemes
+
+Token - The lexeme bundled with other data such as:
+token type, value(for lexemes that are strings, numbers),
+what line it shows up in, etc
+
+Lexical grammar - the rules that determine how a particular language groups
+characters into lexemes
+
+Lox and most programming languages lexical grammars are regular languages, or can be represented
+with regular expressions
