@@ -1,0 +1,149 @@
+04/18/2024
+
+We currently have our tokens via the scanner we made last chapter.
+Now we need to take the tokens and transform them into a more
+complex representation(AST for our tree walker).
+
+This chapter is where we define the grammar for the tree.
+These are called syntatic grammars
+
+5.1: Context-Free Grammars
+        The scanner uses a regular language.
+
+        Regular languages are not powerful enough to
+        handle expressions which can nest arbitrarily deeply.
+
+        Specifices which strings(In this case a sequence of tokens) are
+        valid and which are not.
+
+        5.1.1: Rules for Grammars
+                To specify something that could be an infinite amount of strings,
+                we define rules
+
+                You can:
+                        Use the rules to generate strings that are in the grammar
+                                Strings are called derivations because each is derived
+                                from the rules of the grammar
+
+                        Pick a rule and follow what it tells you to do
+                                Most lingo around grammars are based on this
+
+                Rules are called productions because they produce strings in the grammar
+
+                Each production has:
+                        Head - name
+
+                        Body - describes what it generates
+
+                Terminal - a letter from the grammars alphabet
+                        Literal value
+
+                        In syntatic grammar we are defining, they
+                        are individual lexemes(tokens) such as if or 1234
+
+                        Don't lead to any further "movements" in grammar
+
+                Nonterminal - a named reference to another rule in the grammar
+                        Means "play that rule and insert whatever it produces here"
+
+                Multiple rules may have the same name. When a nonterminal with that
+                named is reached, you can pick any of the rules
+
+                The way to write down the rules is Backus-naur form(BNF)
+                        Mostly everyone uses their own version of this
+
+                Example of BNF:
+                        breakfast  -> protein "with" breakfast "on the side" ;
+                        breakfast  -> protein ;
+                        breakfast  -> bread ;
+
+                        protein    -> crispiness "crispy" "bacon" ;
+                        protein    -> "sausage" ;
+                        protein    -> cooked "eggs" ;
+
+                        crispiness -> "really" ;
+                        crispiness -> "really" crispiness ;
+
+                        cooked     -> "scrambled" ;
+                        cooked     -> "poached" ;
+                        cooked     -> "fried" ;
+
+                        bread      -> "toast" ;
+                        bread      -> "biscuits" ;
+                        bread      -> "English muffin" ;
+
+                The grammar above can be used to generate random breakfasts
+
+                Regular grammars can expression repetition, but can't keep
+                count of how many repetitions there are. This is neccessary because
+                in the example above we can keep expanding the first breakfast rule
+                infinitly 
+
+        5.1.2: Enhancing Our Notation
+                The notation above works but is tedious
+                We can use Extended Backus-naur form(EBNF)
+
+                Ex:
+                        breakfast -> protein ( "with" breakfast "on the side" )?
+                                  | bread ;
+
+                        protein   -> "really"+ "crispy" "bacon"
+                                  | "sausage"
+                                  | ( "scrambled" | "poached" | "fried" ) "eggs" ;
+
+                        bread     -> "toast" | "biscuits" | "English muffin" ;
+
+                        | means or
+                        () group together a set of options
+                        * requires previous symbol or group to be repeated zero or more times
+                        + requires previous symbol or group to be repeated one or more times
+                        ? requires previous thing to appear zero or one time, but not more
+
+                This notation will guide the implementation of the tree data structure we will implement
+                in code.
+
+        5.1.3: A Grammar for Lox Expressions
+                The syntatic grammar is larger than the lexical grammar, so it will be split up into seperate chapters.
+                Right now we will worry about the following expressions:
+                        Literals(Numbers, strings, Booleans, and nil)
+
+                        Unary Expressions(Prefix ! for logical not, and - to negate a number)
+
+                        Binary Expressions(infix arithmetic(+,-,*,/) and logic
+                        operators(==, !=, <, <=, >, >=)
+
+                        Parentheses - a pair of ( and ) wrapped around an expression
+
+                This will give us enough to make expressions like:
+                        1 - (2 * 3) < 4 == false 
+
+                Corresponding grammar:
+                        expression -> literal
+                        | unary
+                        | binary
+                        | grouping ;
+
+                        
+                        literal -> NUMBER | STRING | "true" | "false" | "nil" ;
+                        
+                        grouping -> "(" expression ")" ;
+
+                        unary -> ( "-" | "!" ) expression ;
+
+                        binary -> expression operator expression ;
+
+                        operator -> "==" | "!=" | "<" | "<=" | ">" | ">="
+                        | "+"  | "-"  | "*" | "/" ;
+
+5.2: Implementing Syntax Trees
+        We will define an AST
+
+        The rest of the chapter will be code. see example/scanner, particallarly the
+        tool package/folder
+
+        This chapter was focused on creating a tool that will generate the Expr class for us
+
+5.3: Working with Trees
+5.4: A (Not Very) Pretty Printer
+
+Nothing in the above two sections, mostly just more code
