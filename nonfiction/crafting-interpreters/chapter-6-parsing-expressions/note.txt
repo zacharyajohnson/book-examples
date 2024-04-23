@@ -1,0 +1,208 @@
+04/21/2024
+
+6.1: Ambiguity and the Parsing Game
+        A context free grammar can be used
+        to generate strings that are valid
+
+        A parser takes a string(series of tokens) and
+        map them to terminals in the grammar to figure
+        out which rules could have generated that string
+
+        A grammar is ambiguous where different choices of productions
+        can lead to the same string.
+
+        Ambiguity in the grammar means the parser may misunderstand the
+        users code. As we parse, we track which rules match which parts of
+        the string so we know what part of the language each token belongs
+        to.
+        
+        Given this Grammar:
+                expression -> literal
+                | unary
+                | binary
+                | grouping ;
+
+                literal -> NUMBER | STRING | "true" | "false" | "nil" ;
+                
+                grouping -> "(" expression ")" ;
+
+                unary -> ( "-" | "!" ) expression ;
+
+                binary -> expression operator expression ;
+
+                operator -> "==" | "!=" | "<" | "<=" | ">" | ">="
+                | "+"  | "-"  | "*" | "/" ;
+
+        This is a valid string: 6 / 3 - 1
+
+        There are two ways this could be generated:
+                Starting at expression, pick binary.
+                For the left-hand expression, pick NUMBER, and use 6.
+                For the operator, pick "/".
+                For the right-hand expression, pick binary again.
+                In that nested binary expression, pick 3 - 1.
+
+                Starting at expression, pick binary.
+                For the left-hand expression, pick binary again.
+                In that nested binary expression, pick 6 / 3.
+                Back at the outer binary, for the operator, pick "-".
+                For the right-hand expression, pick NUMBER, and use 1.
+
+        These produce the same strings, but not the same syntax trees:
+                see image/syntax-trees.png
+
+                (6 / 3) - 1 vs 6 / (3 - 1)
+
+        The binary rule lets operands nest any which way you want. This
+        affects the result of the evaluation of the parse tree. The way
+        we solve this is defining rules for precedence and associativity
+
+        Precedence - determines which operator is evaluated first in an expression
+        containing a mixture of different operators. Operators with higher
+        precedence are evaluated before operators with lower precedence.
+
+        Associativity - determines which operator is evaluated first in a series of
+        the same operator.
+                Left-associative - operators on the left evaluate before those on the right
+                        Ex: 5 - 3 - 1 is equivalent to (5 - 3) - 1
+
+                Right-associative
+                        Assignment
+                        Ex: a = b = c -> a = (b = c)
+
+        Without precedence and associativity, an expression that uses multiple operators is
+        ambiguous. It can be parsed into different syntax trees, which could evaluate to
+        different results.
+
+        For Lox, we will use the same precedence rules as C, going from lowest to highest:
+                Name 	        Operators 	Associates
+                Equality 	== != 	        Left
+                Comparison 	> >= < <= 	Left
+                Term 	        - + 	        Left
+                Factor 	        / * 	        Left
+                Unary 	        ! - 	        Right
+
+        We can break up the grammar to eliminate the ambiguity at the cost of more complexity:
+                expression     -> equality ;
+                equality       -> comparison ( ( "!=" | "==" ) comparison )* ;
+                comparison     -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
+                term           -> factor ( ( "-" | "+" ) factor )* ;
+                factor         -> unary ( ( "/" | "*" ) unary )* ;
+                unary          -> ( "!" | "-" ) unary
+                               | primary ;
+
+                primary        -> NUMBER | STRING | "true" | "false" | "nil"
+                               | "(" expression ")" ;
+
+6.2: Recursive Descent Parsing
+        Types of parsing techniques:
+                LL(k)
+                LR(1)
+                LALR
+                Parser combinators
+                Earley parsers
+                Shunting yard algorithm
+
+        Lox will use Recursive Descent Parsing
+
+        Simple, and doesn't require using parser generators
+        like Yacc, Bison or ANTLR
+
+        Fast, robust, and support sophisticated error handling
+
+        Used in:
+                GCC
+                V8(JavaScript VM in Chrome)
+                Roslyn(C# compiler written in C#)
+
+        Considered a top-down parser
+        
+        Top-down parser - starts from the top or outermost grammar rule(expression for us)
+        and works its way down into the nested subexpressions before finally reaching the leaves
+        of the syntax tree.
+
+        In a top down parser, the lowest-precedence expressions are first because they may contain
+        subexpressions of higher precedence
+
+        A recursive descent parser is a literal translation of the grammars rules straight into
+        code
+
+                Grammar notation 	Code representation
+                Terminal	        Code to match and consume a token
+                Nonterminal	        Call to that rule’s function
+                |	                if or switch statement
+                * or +	                while or for loop
+                ?	                if statement
+
+        Called "recursive" because when a grammar rule refers to itself -- directly or indirectly -- that
+        translates to a recursive function call
+
+        6.2.1: The parser class
+                All code. see example/lox Parser.java
+
+6.3: Syntax Errors
+        A parser will when:
+                Given a valid sequence of tokens, produce a corresponding syntax tree
+
+                Given an invalid sequence of tokens, detect any errors and tell the user
+                about the mistake
+
+        When a syntax error is found it must:
+                Detect and report the error
+
+                Avoid crashing or hanging
+
+        A decent parser should
+                Be fast
+
+                Report as many distinct errors as there are
+
+                Minimize cascaded errors. 
+                        When an error is detected, the
+                        parser no longer knows what is going on and
+                        may report phantom errors that occur from the
+                        first error. This can lead to confuse when the
+                        first error is fixed and the phantom errors disappear
+
+        In short, we want to report as many errors as possible but not the ones
+        that are side effects of other ones
+
+        Error recovery - the way a parser responds to an error and keeps going to look
+        for later errors
+
+        6.3.1: Panic Mode Error Recovery
+                As soon as the parser detects an error, it enters panic mode.
+                In this state, it knows at least one token doesn't make sense given
+                its current state
+
+                Before parsing, it needs to get its state and the sequence of forthcoming
+                tokens aligned such that the next token does match the rule being
+                parsed. This is called synchronization
+
+                A rule in the grammar is chosen to be the synchronization point. The
+                parser fixes its parsing state by jumping out of any nested productions
+                until it gets back to that rule. Then it synchronizes the token stream
+                by discarding tokens until it reaches one that can appear at that point
+                in the rule
+
+                Any additional real syntax errors in the the discarded tokens aren't reported,
+                but any mistaken cascaded errors that are side effects of the initial errror aren't
+                reported either
+
+                The traditional place in the grammar to synchronize is between statements
+
+        6.3.2: Entering Panic Mode
+                Most of this is code. See error, consume, and ParseError in Parser.java
+
+                Error Productions - Productions in the grammar that matches erroneous syntax.
+                The parser can parse these but will report it as an error instead of producing
+                a syntax tree
+
+                        Good because we know how the code is wrong and give more helpful
+                        error messages
+        6.3.3: Synchronizing a Recursive Descent Parser
+                Add synchronize method in Parser.java for later. We will try and
+                synchronize on statements, which we don't have yet so we can't test it
+
+6.4: Wiring Up the Parser
+        Set up parser logic in main method of Lox
