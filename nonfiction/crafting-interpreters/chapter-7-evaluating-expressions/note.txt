@@ -1,0 +1,34 @@
+04/23/2024
+
+7.1: Representing Values
+        In Lox, values are created by literals, computed by expressions,
+        and stored in variables
+
+        Since Lox is dynamic, we need to map that to some class in Java
+        that can represent any of our data types. This is the Object
+        class
+
+        Lox type                Java representation
+        Any Lox value           Object
+        nil                     null
+        Boolean                 Boolean
+        number                  Double
+        string                  String
+
+        During runtime we can check what type of value the Object class
+        is by using the instanceof operator
+
+7.2: Evaluating Expressions
+        This is the section with the code to evaluate expressions
+        See Interpreter.java
+        
+        Uses the Visitor pattern
+
+7.3: Runtime Errors
+        Error handling code is written here.
+        Mainly is checking that the types we expect for certain
+        operators are correct
+
+7.4: Hooking Up the Interpreter
+        Sets up the interpreter to evaluate the
+        expressions we evaluate in main
