@@ -1,0 +1,336 @@
+04/23/2024
+
+For a program to do something interesting, it must be able
+to alter the state of a program.
+
+State and statements produce side effects and don't evaluate to a
+value
+
+In this chapter we will implement:
+        print - produces output
+        var - creates state
+
+        Expressions to access and assign to
+        variables
+
+        Blocks and local scope
+
+8.1: Statements
+        Expression statement - lets you place an expression where a statement is expected.
+                Exist to evaluate expressions that side effects
+
+                Ex: A function / method call followed by a ;
+
+        Print statement - evaluates an expression and displays the result to the
+        user
+
+        Grammar for statements:
+                program        -> statement* EOF ;
+
+                statement      -> exprStmt
+                               | printStmt ;
+
+                exprStmt       -> expression ";" ;
+                printStmt      -> "print" expression ";" ;
+
+        8.1.1: Statement Syntax Trees
+                Add Stmt class via the GeneratAst.java file
+
+04/24/2024
+        8.1.2: Parsing Statements
+                Alter parse method in Parser.java to start at program as the root of the
+                grammar now
+
+                Add code for statements, expression statements, and print statements
+
+        8.1.3: Executing statements
+                Alter interpretor to evalute the statements
+
+8.2: Global Variables
+        Two things needed to make work
+                Variable declaration statement
+                        Creates a binding that associates a name with a value
+
+                        Ex: var beverage = "expressio";
+
+                Variable expression
+                        Accesses the binding and looks up the value bound to that name
+                        and returns it
+
+                        Ex: print beverage; // "expresso"
+
+        8.2.1: Variable Syntax
+                Variable declarations are statements, but they are different
+                from other statements
+
+                Split into two parts to restrict where some kinds of statements
+                are allowed
+
+                Ex:
+                        if (monday) print "Ugh, already?"; // Allowed
+
+                        if (monday) var beverage = "espresso"; // Not allowed
+
+                The latter example is confusing because what is the scope of the variable?
+                Does it persist after the if statement? If so what is its value on days other than
+                Monday? Does the variable exist at all on those days?
+
+                Languages like C, Java, etc disallow the latter because its hrad to tell whats
+                going to happen
+
+                There are two levels of "precedence" for statements:
+                        Inside a block or at the top level, these allow all
+                        statements, including declarations
+
+                        Some places only allow "higher" precedence statements
+                        that don't declare names
+
+                Updated Grammar:
+                        For declaration:
+                                program -> declaration* EOF ;
+
+                                declaration -> varDecl
+                                | statement ;
+
+                                statement -> exprStmt
+                                | printStmt ;
+
+                                varDecl -> "var" IDENTIFIER ( "=" expression )? ";" ;
+
+                        For expression:
+                                primary -> "true" | "false" | "nil"
+                                | NUMBER | STRING
+                                | "(" expression ")"
+                                | IDENTIFIER ;
+
+                        The IDENTIFIER clause matches a single identifier token, which is understood
+                        to be the name of the variable being accessed
+
+        8.2.2: Parsing Variables
+                Code for declaration and expression variable grammar
+
+                Also includes usage or error handling via synchronize method
+
+8.3: Environments
+        We need a place to store variables and their current values so we can look them up
+        when a variable name is referenced
+
+        The place we will store them is called an environment
+
+        See Environment.java
+
+        Later we will make it error to redefine existing variables outside of
+        globally scoped variables
+
+        Note: When in doubt, check Scheme for what its rules for variables and
+        scoping is, as one of its main goals was to introduce lexical scoping. Scheme
+        allows redefining variables at the global level
+
+        What should we do if we look up a variables value but the variable hasn't been
+        defined?
+                Make it a syntax error
+
+                Make it a runtime error
+
+                Allow it and return some default value like nil
+
+        Making it a syntax error seems like a good idea since it catches bugs early.
+        However, we run into issues when we want to refer to a variable in code
+        without evaluating it
+
+                Ex:
+                        fun isOdd(n) {
+                          if (n == 0) return false;
+                          return isEven(n - 1);
+                        }
+
+                        fun isEven(n) {
+                          if (n == 0) return true;
+                          return isOdd(n - 1);
+                        }
+
+        If we do the static check, isEven isn't defined in isOdd since it comes after. So we
+        have to defer to runtime check to get recursive functions like this to work
+
+        8.3.1: Interpreting Global Variables
+                Setting up Environment class in the interpreter
+
+                Create visitor for var statement in Interpreter
+
+                We could make it so a variable has to be intialized
+                        Make it a syntax error - strict
+
+                        Make it a runtime error
+                                When an unitialized var is accessed throw
+                                an error
+
+                Both are too strict for us so if a var is not initialized,
+                we return nil
+
+                        Ex:
+                                var a;
+                                print a; // "nil"
+
+                Add visitVariableExpr function in Interpreter
+
+                Now we can define variables, assign them values, and
+                reference them
+
+8.4: Assignment
+        Its possible to create a language that has variables but does not let you reassign(mutate) them
+                Haskell
+                SML - only mutable references and arrays, variables can't be reassigned
+                Rust - needs mut keyword
+
+        Lox doesn't care about this and will allow variable mutation
+
+        8.4.1: Assignment Syntax
+                Is an expression, some langauges its a statement
+
+                Lowest precedence expression
+
+                Grammar:
+                        expression     -> assignment ;
+                        assignment     -> IDENTIFIER "=" assignment
+                                       | equality ;
+
+                Add Assign Expression to GenerateAst.java
+
+                Add assignment code to Parser.java
+
+        8.4.2: Assignment Semantics
+                Add code for assignment to Interpreter.java
+
+8.5: Scope
+        Defines a region where a name maps to a certain entity.
+
+        Multiple scopes enable the same name to refer to different things
+        in different contexts
+
+        Lexical scope / static scope - a style of scoping where the text of the
+        program itself shows where a scope begins and ends
+
+        In most modern languages, variables are lexically scoped.
+
+        When you see a variable being used, you can figure out which variable
+        declaration it refers to just by statically reading the code
+
+        Ex:
+                {
+                  var a = "first";
+                  print a; // "first".
+                }
+
+                {
+                  var a = "second";
+                  print a; // "second".
+                }
+
+                Each block has var a declared, and you can tell which value will get printed
+                by looking at the code
+
+        Dynamic scope - can't tell what a name refers to until the code is excuted
+
+        In Lox, variables aren't dynaically scoped but methods and fields on objects
+        are
+
+        Ex:
+                class Saxophone {
+                  play() {
+                    print "Careless Whisper";
+                  }
+                }
+
+                class GolfClub {
+                  play() {
+                    print "Fore!";
+                  }
+                }
+
+                fun playIt(thing) {
+                  thing.play();
+                }
+
+                In playIt, you can't tell which play function
+                is called until runtime when the class is passed
+                into the function
+
+        Scope and environments are related. Scope is the theoretical concept
+        and environments are the implementation
+
+        Block scope - scope controlled by curly-braced blocks
+        The beginning of a block introduces a new local scope, and that
+        scope ends when execution passes the closing }. Any variables
+        declared inside the block disappear.
+
+        Ex:
+                {
+                  var a = "in block";
+                }
+                print a; // Error! No more "a".
+
+        8.5.1: Nesting and Shadowing
+                A block of code in one scope of the program
+                shouldn't interfere with another block
+
+                Ex:
+                        // How loud?
+                        var volume = 11;
+
+                        // Silence.
+                        volume = 0;
+
+                        // Calculate size of 3x4x5 cuboid.
+                        {
+                          var volume = 3 * 4 * 5;
+                          print volume;
+                        }
+
+                The volume variable in the global scope and the
+                block scope are entirely different. When the block
+                scope ends, its version of volume is deleted and any
+                further access to volume will use the global one and
+                isn't impacted by the block scope ending
+
+                Shadowing - when a local variable has the same name as
+                a variable in an enclosing scope. Code inside the block
+                can't see it any more -- it is hidden in the "shadow" cast by
+                the inner one -- but its still there
+
+                When a new block scope is entered, variables defined in outer scopes
+                need to preserved so they are still around when it ends
+
+                This will be done by creating a new environment for each block containing
+                only the variables defined in that scope. When we exit the block, we
+                discard its environment and restore the previous one.
+
+                We also need to handle enclosing variables that are not shadowed
+
+                Ex:
+                        var global = "outside";
+                        {
+                          var local = "inside";
+                          print global + local;
+                        }
+
+                We can do all this by altering Environment.java to be able to
+                reference enclosing Environments. See code
+
+        8.5.2: Block Syntax and Semantics
+                Grammar for blocks:
+                        statement -> exprStmt
+                        | printStmt
+                        | block ;
+
+                        block -> "{" declaration* "}" ;
+
+04/25/2024
+                block - a (possibly empty) series of statements or declarations surrounded
+                by curly braces. A block is itself a statement and can appear anywhere a
+                statement is allowed
+
+                Add Block to Stmt in GenerateAst.java
+
+                Add block function to Parser.java
+
+                Add visitBlockStmt and executeBlock functions to Interpreter.java
