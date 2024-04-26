@@ -1,0 +1,166 @@
+04/25/2024
+
+9.1: Turing Machines(Briefly)
+        In the last century, mathematicians wanted
+        to answer questions:
+                Can all true statements be proven?
+
+                Can we compute all functions that we can define?
+
+                What do we mean when we claim a function is computable?
+
+        The answers were presumed to be yes, but that answers are actually
+        no.
+
+        Alan Turing and Alonzo Church devised a mechanism to answer what
+        types of functions are computable
+
+        Alan Turing - a-machines(later called Turing Machines)
+
+        Alonzo Church - lambda calculus
+
+        Both are considered "computable functions"
+
+        Both are still used as the basis for models of computation
+
+        Both are equivalent in power
+
+        Turing complete - The ability for a system / programming language
+        to be able to simulate any Turing machine
+                Needs:
+                        Arithmetic(Already have)
+
+                        Control Flow(Will get this chapter)
+
+                        The ability to allocate and use (theorectically)
+                        arbitrary amounts of memory (Will get later)
+
+        If you can write a turing machine in your language, it is able to
+        compute any computable function
+
+9.2: Conditional Execution
+        Two kinds of control flow:
+                Conditional / branching control flow - used to not
+                execute some piece of code
+
+                Looping control flow - executes a chunk of code more than
+                once. Jumps back so you can do something again. Has conditional
+                logic to know when to stop looping
+
+        Branching
+                Two main examples for C-derived languages
+                        if statement
+                                Conditionally execute statements
+
+                        conditional operator(?:)
+                                Conditionally execute expressions
+
+        Lox won't have ?: for simplicity
+
+        If grammar:
+                statement -> exprStmt
+                | ifStmt
+                | printStmt
+                | block ;
+
+                ifStmt -> "if" "(" expression ")" statement
+                               ( "else" statement )? ;
+
+        Added If statement to GenerateAst.java
+
+        Add ifStatement function to Parser.java
+
+        Consider the following:
+                if (first) if (second) whenTrue(); else whenFalse();
+
+                Which if does the else belong to?
+                
+                Its ambigious which one, called the dangling else problem
+
+                Most languages decide to group the else with the nearest if
+                that precedes. This is what we will do as well. The ifStatement
+                function already does this see it eagerly looks for an else
+                before returning
+                
+        Add visitIfStmt to Interpreter.java
+
+9.3: Logical Operators
+        Two additional operators that are control flow constructs
+                Logical operators and and or
+
+        Different from other binary operators because they short-circult
+                Ex:
+                        false and sideEffect();
+
+                        sideEffect will never be checked because the first operand
+                        is false
+
+                        Both operands in an and operation must be true
+        Grammar:
+                expression -> assignment ;
+
+                assignment -> IDENTIFIER "=" assignment
+                | logic_or ;
+
+                logic_or -> logic_and ( "or" logic_and )* ;
+                logic_and -> equality ( "and" equality )* ;
+
+        Add Logical class to GenerateAst.java
+
+        Alter assignment function and add or and and functions to Parser.java
+
+        Add visitLogicalExpr function to Interpreter.java
+
+9.4: While Loops
+        Grammar:
+                statement -> exprStmt
+                | ifStmt
+                | printStmt
+                | whileStmt
+                | block ;
+
+                whileStmt -> "while" "(" expression ")" statement ;
+
+        Add While statement to GenerateAst.java
+
+        Add whileStatement to Parser.java
+
+        Add visitWhileStmt to Interpreter.java
+
+9.5: For Loops
+        Ex:
+                for (var i = 0; i < 10; i = i + 1) print i;
+
+        Grammar:
+                statement -> exprStmt
+                | forStmt
+                | ifStmt
+                | printStmt
+                | whileStmt
+                | block ;
+
+                forStmt -> for" "(" ( varDecl | exprStmt | ";" )
+                                 expression? ";"
+                                 expression? ")" statement ;
+
+        9.5.1: Desugaring
+                Lox doesn't need for loops, a equivalent flow of control can
+                be done using a while loop
+
+                Ex:
+                        {
+                          var i = 0;
+                          while (i < 10) {
+                            print i;
+                            i = i + 1;
+                          }
+                        }
+
+                A for loop can be considered syntactic sugar since it makes
+                it nicer to do something while translating it to a more
+                primitive less nice form (while loop in this case)
+
+                This is exactly what we are going to do in our implementation
+                of for loops for Lox
+
+                Add forStatement function to Parser.java
