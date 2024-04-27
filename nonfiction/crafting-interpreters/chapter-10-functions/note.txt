@@ -1,0 +1,210 @@
+04/26/2024
+
+10.1: Function Calls
+        Ex: average(1,2);
+
+        Function name isn't part
+        of call syntax
+
+        Callee - thing being called
+                Can be any expression that evaluates to a function
+
+                Ex: getCallBack()();
+                        Two expressions
+
+                        First pair has getCallBack as its
+                        expression
+
+                        Second has the entire getCallBack()
+                        expression as its callee
+
+        Has higher operator precedence than any other
+        operator
+
+        Grammar:
+                unary -> ("!" | "-") unary | call;
+                call -> primary ( "(" arguments? ")" )* ;
+                arguments -> expression("," expression)* ;
+
+        Currying - defining a function that takes multiple arguments
+        as a series of nested functions
+                Each function takes one argument and returns a new
+                function
+
+                Found in ML family languages
+
+                Ex: f(1)(2)(3)
+
+        Add call expression to GenerateAst.java
+
+        Add call and finishCall methods to Parser.java
+
+        Cannot declare / define functions yet
+
+        10.1.1: Maximum Argument Counts
+                Right now there are no limits to how many arguments
+                there can be for a function
+
+                Languages
+                        C - at least 127
+                        Java - no more than 255
+
+                Limit will be 255
+                        254 if its an instance method, gets passed
+                        into function behind the scenes
+
+                Alter finishCall method to add limit in Parser.java
+
+                Lox doesn't throw an error if the limit is exceeded
+                as thats how we go into panic mode. The syntax is ok,
+                there is just too many arguments
+
+        10.1.2: Interpreting Function Calls
+                Add visitCallExpr to Interpreter.java
+
+                Lox will evaluate arguments in the order they are passed in
+
+                Some languages don't specify the order they are evaluated so they
+                can be reordered for efficency
+                        Ex: Scheme, C
+
+                        This can lead to hard to debug code if the
+                        args produce side effects
+
+                Add LoxCallable.java
+                        This will be the interface functions will implement
+
+                        Will be used for class constructors as well
+
+        10.1.3: Call Type Errors
+                Add instanceof check to visitCallExpr function in
+                Interpretor.java
+                        Will throw error if an expression is not a function / constructor
+
+        10.1.4: Checking Arity
+                Arity - the number of arguments a function or operation expects
+                        Unary - 1
+                        Binary - 2
+
+                Add arity check to visitCallExpr function in Interpreter.java
+
+                Add arity function to LoxCallable.java
+
+10.2: Native Functions
+        Functions that the interpreter exposes to user code
+        but that are implemented in the host language(Java), not
+        the language being implemented(Lox)
+
+        Also called
+                Primitives
+                Externel Functions
+                Foriegn Functions
+
+        Foreign Function Interface(FFI)
+                Allows user to provide own native functions
+
+        10.2.1: Telling Time
+                Useful for benchmarking
+
+                Add Environments to Interpreter.java
+
+                Lox puts functions and variables in the same namespace,
+                so name names will collide
+
+                Common Lisp
+                        Seperate
+
+                        Variables and functions with the same
+                        name don't collide
+
+                Lisp-1
+                        Languages that have the same namespace for variables
+                        and functions
+
+                Lisp-2
+                        Languages with seperate namespaces for variables and
+                        functions
+                Implement clock function in Interpreter.java
+                        Implements LoxCallable Interface
+
+10.3: Function Declaration
+        Grammar:
+                declaration -> funcDecl
+                | varDecl
+                | statement ;
+
+                funDecl -> "fun" function ;
+
+                parameters -> IDENTIFIER ( "," IDENTIFIER)* ;
+
+        Add function statement to GenerateAst.java
+
+        Add function function to Parser.java
+
+10.4: Function Objects
+        Add LoxFunction.java
+
+        Add VisitFunctionStmt to Interpreter.java
+
+10.5: Return Statement
+        Grammar:
+                statement -> exprStmt
+                | forStmt
+                | ifStmt
+                | printStmt
+                | returnStmt
+                | whileStmt
+                | block
+
+                returnStmt -> "return" expression? ";" ;
+
+        Add return statement to GenerateAst.java
+
+        Add returnStatement function to Parser.java
+
+        10.5.1: Returning From Calls
+                The way we will return from a function is via exceptions
+
+                See visitReturnStmt in Interpreter.java, call in LoxFunction.java
+                and Return.java
+
+                This works as well because blocks always clean up their environment
+                via the finally block in its implementation
+
+10.6: Local Functions and Closures
+        LoxFunctions implementation of call creates a new environment
+        where it binds the functions parameters
+
+        Right now, the parent environment for all functions is
+        the global environemnt. This is so if it can't find
+        an identifier it can look at the global scope to find
+        it
+
+        However, for Lox function declarations they are allowed
+        anywhere a name can be bound, even in other functions
+
+        Closure - a data structure that "closes over" and holds on
+        to the surrounding variables where the function is declared
+                Ex: fun makeCounter() {
+                        var i = 0;
+                        fun count() {
+                                i = i + 1;
+                                print i;
+                        }
+
+                        return count;
+                     }
+
+                     var counter = makeCounter();
+
+                The var counter captures the variable i since
+                it captures the environment and function count
+
+        This won't work because the environment that functions
+        look at is the global environment
+
+        Alter LoxFunction to include a closure Environment variable
+
+        Now the example above will work since each function captures the
+        environment it was declared in in addition to the environment
+        it encloses
