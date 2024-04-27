@@ -1,0 +1,284 @@
+04/27/2024
+
+When we added closures, we left some holes in the way scoping works.
+This chapter will be used to fix those issues introduced
+
+11.1: Static Scope
+        Lox uses lexical scoping
+
+        A variable usage refers to the preceding declaration
+        with the same name in the innermost scope that encloses
+        the expression where the variable is used
+
+        Ex:
+                var a = "outer";
+                {
+                        print a;
+                        var a = "inner";
+                }
+
+        Here, the a being printed is the outer one
+        since it appears before the print statement that
+        uses it. In most caes, the declaration preeding in text
+        will also precede the usage in time. But not always
+
+        Ex in Javascript:
+                {
+                        console.log(a);
+                        var a = "value";
+                }
+
+                variables declared using var are implicitly "hoisted" to
+                the beginning of the block. Any use of that name in the
+                block will refer to that variable, even if the use
+                appears before the declaration. The example above becomes
+                this
+
+                {
+                        var a; // Hoist
+                        console.log(a);
+                        a = "value";
+                }
+
+        In this case:
+                var a = "outer"
+                {
+                        var a = "inner;
+                        print a;
+                }
+
+        The innermost a value gets printed for Lox
+
+        In this weird case:
+                var a = "global";
+                {
+                        fun showA() {
+                                print a;
+                        }
+
+                        showA();
+                        var a = "block";
+                        showA();
+                }
+
+        This should print global twice, but it prints
+        block the second time. This means we broke something
+
+        11.1.1: Scopes and Mutable Environments
+                In our interpreter, environments are the
+                dynamic manifestation of static scopes.
+                The two mostly stay in sync.
+
+                We also bind variables in environments.
+                This is where the bug is
+
+                The problem is we create a new environment for
+                the function, with a reference to the surrounding
+                environment. Since the surrounding environment redeclares
+                a, that changes the behavior of the 2nd function call
+
+                People tend to consider all the code within a block as
+                being within the same scope. This isn't quite right
+
+                Ex:
+                        {
+                                var a;
+                                // 1
+
+                                var b;
+                                // 2
+                        }
+
+                At the first line, only a is in scope. A the
+                second line both a and b are. If you define a 
+                scope as a set of declaration then these are not
+                the same scope. 
+
+                In our implementation, we treat each block like one
+                scope, just a scope that changes over time. Closures
+                do not like that
+
+                When a function is declared, it captures a reference
+                to the current environment. The function should
+                capture a frozen snaphot of the environment as it
+                existed at the moment the function was declared
+
+                Currently when a variable is later declared in the scope
+                the closure sees the new variable, even though the declaration
+                does not precede the function
+
+        11.1.2: Persistent Environment
+                Persistent Data Structures  - a structure that
+                can never be directly modified.
+                        Any "modification" to an existing structure
+                        produces a brand new object that contains
+                        all of the original data and the new
+                        modification. The original is left unchanged
+
+                So each variable would create a new environment that
+                would split the scope before and after the operation
+
+                Classic way to do this in Scheme interpreters
+
+                In Lox, this would require changing a bunch of code.
+                Instead we will bake the static resolution into the
+                access operation itself
+
+11.2: Semantic Analysis
+        Our interpreter resolves a variable -- tracks down which declaration
+        it refers to -- each and every time the variable expression is
+        evaluated. This is slow and inefficent.
+
+        Since static scope means that variable usage resolves to the
+        same declaration, we should resolve each variable use once
+
+        We will write a chunk of code that inspects the user's program,
+        finds every variable mentioned, and figures out which declaration
+        each refers to
+
+        Semantic Analysis - figures out what pieces of the program
+        actually mean
+                Ex: Resolve variable bindings
+
+                    Know not just that an expression is a variable,
+                    but which variable it is
+
+        We can correctly solve our closure issue and "resolve" a 
+        a variables usage by keeping track
+        of how many scope "hops" need to be done to get the variable
+
+        This is typically put in the parser itself
+
+        11.2.1: A Variable Resolution Pass
+                After the parser produces the syntax tree, but
+                before the interpreter starts executing it, we
+                will do a single walk over the tree to resolve
+                all of the variables it contains
+
+                Additional passes between parsing and execution are
+                common. Optimizations are often implemented in seperate
+                passes like this too.
+
+                Any work that doesn't rely on state that's only
+                available at runtime can be done in this way
+
+                Unlike our interpreter, this static analysis is
+                different:
+                        There are no side effects
+
+                        No Control Flow
+
+11.3: A Resolver Class
+        Add Resolver.java
+
+        Only a few node types are used for resolving
+                Block statments - introduce new scope for the statements
+                it contains
+
+                Function declaration - introduces a new scope for its
+                body and binds its parameters in that scope
+
+                Variable declaration - adds a new variable to the
+                current scope
+
+                Variable and assignment expressions - need to have their
+                variables resolved
+
+        11.3.1: Resolving Blocks
+                Add visitBlockStmt, resolve, beginScope, and endScope
+                functions to Resolver.java
+
+        11.3.2: Resolving Variable Declarations
+                Add visitVarStmt, declare, and define, functions to
+                Resolver.java
+
+                What should happen for this use case?
+                        var a = "outer";
+                        {
+                                var a = a;
+                        }
+                
+                Three options:
+                        Run the initalizer, then put the new variable
+                        in scope
+                                var temp = a;
+                                var a;
+                                a = temp;
+
+                        Put the new variable in scope, then run
+                        the initializer
+                                var a ;
+                                a = a;
+
+                        Make it an error to reference a variable in its
+                        intializer
+                                Have the interpreter fail either at compile
+                                time or runtime if the initializer mentions
+                                the variable being initialized
+
+                We will choose option 3 at compile time
+
+        11.3.3: Resolving Variable Expressions
+                Add visitVariableExpr, and resolveLocal functions to
+                Resolver.java
+
+                visitVariableExpr is where we put the check for a
+                variable referencing itself(option 3)
+
+        11.3.4: Resolving Assignment Expreessions
+                Add visitAssignExpr to Resolver.java
+
+        11.3.5: Resolving Function Declarations
+                Add visitFunctionStmt and resolveFunction
+                to Resolver.java
+
+        11.3.6: Resolving the Other Syntax Tree Nodes
+                Add visitExpressionSmt, visitIfStmt,
+                visitPrintSmt, visitReturnStmt, visitWhileStmt
+                visitBinaryExpr, visitCallExpr, visitGroupingExpr,
+                visitLiteralExpr, visitLogicalExpr, and visitUnaryExpr
+                to Resolver.java
+
+11.4: Interpreting Resolved Variables
+        Add resolve method to Interpreter.java
+
+        Add locals variable to Interpreter.java
+
+        11.4.1: Accessing a Resolved Variable
+                Add lookUpVariable to Interpreter.java
+
+                Add getAt, ancestor functions to
+                Environment.java
+
+        11.4.2: Assigning to a resolved variable
+                Alter visitAssignExpr in Interpreter.java
+
+                Add assignAt function to Environment.java
+
+        11.4.3: Running the resolver
+                Add resolver invocation to Lox.jav
+
+11.5: Resolution Errors
+        We will enhance semantic analysis pass in Resolver
+        / Parsing to catch common errors
+
+        Ex:
+                fun bad() {
+                        var a = "first";
+                        var a = "second";
+                }
+
+        This is probably an error and we should catch
+        this
+
+        11.5.1: Invalid Return Errors
+                We can currently do a return statement
+                when we are not inside a function. This
+                should not be allowed
+
+        Add FunctionType enum and resolveFunction method to
+        Resolver.java
+
+        Alter visitReturnSmt in Resolver.java
+
+        Add hadError check to have Resolver.resolve in Lox.java
