@@ -1,0 +1,126 @@
+04/27/2024
+
+12.1: OOP and Classes
+        Three paths to OOP:
+                Classes
+                Prototypes
+                Multimethods
+
+        Lox will be using classes
+
+        Used to bundle data with code that
+        acts on it
+
+        Users declare a class that:
+                Exposes a constructor to create
+                and initialize new instances of the
+                class
+
+                Provides a way to store and access fields
+                on instances
+
+                Defines set of methods shared by all instances
+                of the class that operate on each instances state
+
+12.2: Class Declarations
+        Grammar:
+                declaration -> classDecl
+                | funDecl
+                | varDecl
+                | statement ;
+
+                classDecl -> "class" IDENTIFIER "{" function* "}" ;
+
+                function -> IDENTIFIER "(" parameters? ")" block ;
+                parameters -> IDENTIFIER ( "," IDENTIFIER )* ;
+
+        Add Class statement to GenerateAst.java
+
+        Add classDeclaration function to Parser.java
+
+        Add visitClassStm`t to Resolver.java
+
+        Lox allows classes to be defined as local variables
+        similar to functions
+
+        Add visitClassStmt to Interpreter.java
+
+        Add LoxClass.java
+12.3: Creating Instances
+        The way you create instances isn't consistent between languages
+
+        Ruby / Smalltalk
+                Create instances by calling a method on the class
+                object itself
+
+        C++ / Java
+                New keyword dedicated to making new object
+
+        Python
+                "Call" the class itself like a function
+
+        We already have function calls, so we will use call
+        expressions on class objects to create new instances
+
+        Ex:
+                class Bagel {}
+                var bagel = baegl();
+
+        Have LoxClass.java implement LoxCallable interface
+
+12.4: Properties on Instances
+        Properties in Lox follows JavaScript and Python where
+        an instance is an open collection of named values
+
+        Methods on the instance's class can access and modify
+        properties, but so can outside code
+
+        Properites are access using a . syntax
+                Ex: someObject.someProperty
+
+        The dot has the same precedence as the parentheses in a
+        function call expression
+
+        Grammar:
+                call -> primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
+
+        12.4.1: Get Expressions
+                Add Get Expression to GenerateAst.java
+
+                Alter call function in Parser.java
+
+                Add visitGetExpr to Resolver.java
+
+                Add visitGetExpr to Interpreter.java
+
+                Add get function to LoxInstance.java
+
+        12.4.2
+                Setters use the same syntax as getter, except they
+                appear on the left side of an assignment
+
+                Ex: someObject.someProperty = value;
+
+                Grammar:
+                        Assignment -> ( call ".")? IDENTIFIER "=" assignment
+                                      | logic_or 
+
+                Unlike getters, settes don't chain
+
+                However, the reference call allows any high-precedence
+                expressions before the last dot, including any number
+                of getters:
+                        breakfast.omelette.filling.meat = ham
+
+                        Only the last part(.meat) is the setter
+
+                Add Set expression in GenerateAst.java
+
+                Alter assignment function in Parser.java
+
+                Add visitSetExpr in Resolver.java
+
+                Add visitSetExpr to Interpreter.java
+
+12.5: Methods on Classes
+Chapter 12: NOT FINISHED
