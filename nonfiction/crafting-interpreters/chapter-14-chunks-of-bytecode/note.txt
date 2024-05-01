@@ -1,0 +1,321 @@
+04/29/2024
+
+Why reimplement another version of Lox when we have the interpreter
+we wrote in Java?
+        Jlox relies on the JVM to do a lot. To understand how it all
+        works we need to build the pieces overselves
+
+        Too slow
+                Ex:
+                        fun fib(n) {
+                                if (n < 2) return n;
+                                return fib(n - 1) + fib(n - 2);
+                        }
+
+                        var before = clock();
+                        print fib(40);
+                        var after = clock();
+                        print after - before
+
+                Jlox takes 72 seconds for this to run. A equivalent
+                C program takes half a second
+
+                Its hard to get a programming language to be as
+                fast as C, but we don't need to settle for more
+                than two orders of magnitude slower
+
+                We could profile jlox, but walking the AST is
+                the wrong design and can only be optimized so much
+
+We will start with a new core model for our new interpreter clox,
+using bytecode
+
+14.1: Bytecode?
+        14.1.1: Why not walk the AST?
+                Pros for jlox
+                        Already done
+                                very simple to run
+                                code and implement
+
+                        Portable
+                                Can run anywhere Java runs
+
+                Cons for jlox
+                        Not memory efficient
+                                Each piece of syntax becomes an
+                                AST node. A tiny Lox expression like
+                                1 + 2 turns into a slew of objects
+                                with lots of pointers between them.
+                                Putting data on the heap kills CPU
+                                caching(100 times faster)
+
+        14.1.2: Why Not Compile to Native Code?
+                If we want our interpreter to go as fast as possible
+                we would compile to machine code
+
+                The fastest languages do this
+
+                Machine code - dense series of operations,
+                encoded directly in binary
+
+                Its really hard to compile to native machine code.
+                Each architecture has sophisitcated requirements
+                to work
+
+                Lack of portability
+                        Your code will only work on that architecture
+
+                Takes years to master each architecture and there are
+                several
+
+        14.1.3: What is Bytecode?
+                Sits in the middle between our tree-walker interpreter
+                and compiling to native code
+
+                Retains the portability of a tree walker, no assembly
+
+                Sacrifices some simplicity to get a performance boost
+
+                Not as fast as native code
+
+                Resembles machine code. Is a dense, linear sequence of
+                binary code
+
+                Sequential instructions so overhead is low and is
+                nice for CPU cache
+
+                Higher level instruction set than any real chip
+                        An idealized fantasy instruction set
+                        that makes your life as the compiler writer
+                        easier
+
+                Since its a fantasy architecture we have  to write an emulator
+
+                Emulator - a simulated chihp written in software that
+                interprets the bytecode one instruction at a time
+                        Also called virtual machine (VM)
+
+                Emulation adds overhead so its slower than native code.
+                In return, we get portability
+
+                Writing our VM in a language like C will allow us to
+                run our language in any hardware it supports
+
+14.2: Getting Started
+        Add main.c and common.h
+
+14.3: Chunks of Instructions
+        Add chunk.h(has OpCode enum)
+
+        In our bytecode format, each instruction has a one-byte
+        operation code(opcode). That number controls what kind
+        of instructions we are doing (adding, subtracting, etc)
+
+        OP_RETURN - "return from current function"
+
+        14.3.1: A Dynamic Array of Instructions
+                Add Chunk struct to chunk.h
+                        Right now it is just a wrapper around
+                        an array of bytes
+
+                        We will store our opcodes here
+
+                        Dynamic in size
+
+                Dynamic arrays are:
+                        Cache-friendly, dense storage
+
+                        Constant-time indexed element lookup
+
+                        Constant-time appending to the end of
+                        the array
+
+                We will keep track of the number of elements in the
+                array("capacity") and how many of these allocated
+                entries are actually in use("count")
+
+                When we add an element, if the count is less than
+                the capacity, then there is space available in
+                the array.
+
+                If there is no more capacity we:
+                        Allocate a new array with more capacity
+
+                        Copy the existing elments from the old array
+                        to the new one
+
+                        Store the new capacity
+
+                        Delete the old array
+
+                        Update code to point to the new array
+
+                        Store the element in the new array now
+                        that there is room
+
+                        Update the count
+
+                Add initChunk to chunk.h and chunk.c
+                Add writeChuck to chunk.h and chunk.c
+                Add memory.h
+                        Has GROW_CAPACITY and GROW_ARRAY macros
+                        Add reallocate function
+                Add memory.c
+                        Add reallocate function
+
+                The reallocate function is the single function we'll
+                use for all dynamic memory management in clox
+                        Allocating memory
+                        Freeing it
+                        Changing the size of an existing allocation
+
+                This will be important later when we add a garbage collector
+                that needs to keep track of how much memory is in use
+
+                The two size arguments passed to reallocate control which
+                operation to perform
+                        oldsize = 0, newSize = non-zero
+                                Allocate new block
+                        oldSize = non-zero, newSize = 0
+                                Free allocation
+                        oldSize = non-zero, newSize = smaller than oldSize
+                                Shrink existing allocation
+                        oldSize = non-zero, newSize = larger than oldSize
+                                Grow existing allocation
+
+                We need a way to dellocate / free memory too
+                        Add freeChunk to chunk.h and chunk.c
+
+                        Add FREE_ARRAY macro to memory.h
+                                Uses reallocate function
+
+14.4: Disassembling Chunks
+        We can now allow a chunk to test
+
+        It is hard to tell if actually works or not
+
+        To fix this, we will create a disassembler
+
+        Assembler - program that takes a file containing human-readable
+        mnemonic names for CPU instructions like "ADD" and "MULT" and
+        translates them to their binary machine code equivalent
+
+        Disassembler - translates machine code into textual listing
+        of instrucionts
+
+        Add debug.h and debug.c
+                disassembleChunk function
+                disassembleInstruction function
+
+        Can print out chunks, and the offsets of each instructions
+        in it
+
+14.5: Constants
+        14.5.1: Representing Values
+                Add value.h
+
+                Many instruction sets store values directly in
+                the code stream right after the opcode, these
+                are call immediate instructions because the bits
+                for the value are immediately after the opcode
+                        Doesn't work well for large or large or
+                        variable-sized constants like strings
+
+                Constants typically store things like strings in
+                a seperate "constant data" region in the binary
+                executable. Then, the instruction to load a
+                constant has an address or offset pointing to
+                where the value is stored in that section
+
+                Java associates a constant pool for each class,
+                Lox will do something similar
+
+                For clox, each chunk will carry with it a list of
+                values that appear as literals in the program. We
+                will put all constants there
+
+        14.5.2: Value Arrays
+                Add ValueArray to value.h
+
+                Add initValueArray, writeValueArray, and
+                freeValueArray functions to value.h and
+                value.c(same as chunk)
+
+                Add ValueArray to Chunk struct
+
+                Add addConstant file to chunk.h / chunk.c
+                        Returns the offset in the array
+                        where the constant was put
+
+        14.5.3: Constant Instructions
+                We can store constants in chunks, but we also
+                need to execute them:
+                        print 1;
+                        print 2;
+
+                The chunk needs to know when to produce them
+                so they are printed in the right order
+
+                Add OP_CONSTANT to chunk.h
+                        When the VM executes a constant instruction,
+                        it "loads" the constant for use.
+
+                        More complex then OP_RETURN
+
+                        We need to know which constant to load
+
+                Instructions can have operands. These are stored
+                as binary data immediately after the opcode
+
+                Each opcode determines how many operand bytes it
+                has and what they mean
+
+                Instruction format - the layout / parameters for
+                each opcode
+
+                OP_CONSTANT will take a single byte operand that
+                specifies which constant to load from the chunk's
+                constant array
+
+                Add constant logic to main.c
+
+                Add OP_CONSTANT switch case to debug.c
+
+                Add constantInstruction to debug.c
+
+                Add printValue function to value.h / value.c
+
+14.6: Line Information
+        When a runtime error occurs, we show the user the line number of
+        where it happened
+
+        In jlox, numbers lived in tokens, which were stored in the AST nodes
+        For clox, we need another solution since we are now using bytecode
+
+        Given any bytecode instruction, we need to be able to determine the line        of the user's source program that it was compiled from
+
+        In each chunk, we will store a seperate array of integers that parallels
+        the bytecode. Each number in the array is the line number for the
+        corresponding byte in the bytecode. When a runtime error occurs, we
+        look up the line number at the same index as the current instructions
+        offset in the code array
+
+        Add int* lines to chunk.h
+        Initalize / free lines in chunk.c code
+
+        Alter writeChunk to take the line parameter
+
+        14.6.1: Disassembling Line Information
+                Add line arguments to writeChunk in main.c
+
+                Add line logic in disassembleInstruction function
+                in debug.c
+                        Line number will be displayed, otherwise |
+                        if it matches the previous instructions line
+                        number. This is to show what multiple
+                        bytecode instructions correlate to the same
+                        line in code
+
+                The reduction of ASTs down to three arrays(bytes of code,
+                constant values, and line info for debugging) is the main
+                reason this implementation will be faster then jlox
