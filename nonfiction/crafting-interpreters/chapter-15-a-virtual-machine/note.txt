@@ -1,0 +1,136 @@
+05/01/2024
+
+15.1: An Instruction Execution Machine
+        Virtual machine - will take a chunk of bytecode instructions
+        and execute it
+
+        Add vm.h
+                VM struct
+
+                initVM and freeVM functions
+
+        Add vm.c
+                initVM and freeVM functions (empty for now)
+
+        Add initVM and freeVM functions to main.c
+
+        15.1.1: Executing Instructions
+                Add interpret function and InterpretResult enum
+                to vm.c / vm.h
+
+                Add uint8_t* ip to VM struct in vm.h
+                        Instruction pointer
+
+                        Points to the the instruction currently
+                        being executed
+
+                        Also called program counter
+
+                        Almost every instruction set has something
+                        akin to this
+
+                Add run function to vm.c
+
+                Decoding / Dispatching
+                        Directing an opcode to the underlying code that
+                        implements its functionality
+
+                        Direct threaded code, jump table, computed goto
+
+                Add OP_CONSTANT switch case to run function in vm.c
+
+        15.1.2: Execution Tracing
+                The VM will at this point now print the value 1.2
+
+                However, once we have an actual implementation it
+                will be a black box
+
+                To fix this, we will add diagnostic logging to the VM
+                similar for the chunks
+
+                For us only, so lets hide it behind a flag
+
+                Add DEBUG_TRACE_EXECUTION flag in common.h
+
+                Add DEBUG_TRACE_EXECUTION check and disassembleInstruction
+                function to vm.c
+
+15.2: A Value Stack Manipulator
+        The way we will transfer data between instructions that need
+        them is a stack
+
+        Last in first out data structure
+
+        15.2.1: The VM's Stack
+                Is simple to implement but fast enough to be used
+                in production language implementations
+
+                They aren't the fastest though, and modern implementations
+                use just-in-time compilation pipelines to make it much
+                faster(JVM, CLR, Javascript)
+
+                Add stack and stackTop to VM struct in vm.h
+
+                Bottom of the stack
+                        First value pushed and last popped
+
+                        Element zero of array, later pushed values
+                        follow
+
+                The stack grows and shrinks as values are pushed and popped
+                We need to track where the top of the stack is in the
+                array(StackTop)
+
+                stackTop - pointer that points at the array element
+                just past the element containing the top value of the
+                stack. We do this so we can say the stack is empty if
+                its pointing at element zero of the array. If we pointed
+                at the top element, then the empty stack for empty would
+                be -1, and thats undefined in C
+                        Can think of it points to where the next value
+                        pushed will go
+
+                Add resetStack function call in initVM function in vm.c
+
+                Add push and pop functions to vm.h / vm.c
+
+        15.2.2: Stack Tracing
+                Add stack tracining logic to run function
+                in vm.c
+
+                Push OP_CONSTANT to stack in run function
+                in vm.c
+
+                Pop stack when OP_RETURN in run function in vm.c
+
+15.3: An Arithmetic Calculator
+        Unary negation
+                Add OP_NEGATE to enum OpCode in chunk.h
+
+                Add OP_NEGATE case in run function in vm.c
+
+                Add OP_NEGATE case in disassembleInstruction function
+                in debug.c
+
+        15.3.1: Binary Operators
+                Add OP_ADD, OP_SUBTRACT, OP_MULTIPLY, and
+                OP_DIVIDE to OpCode in chunk.h
+
+                Add switch cases for operators in run function
+                in vm.c
+
+                Add BINARY_OP macro in run function in vm.c
+                        Uses a do while loop that only executes
+                        once
+
+                        Gives a way to contain multiple statements
+                        inside a block that also permits a semicolon
+                        at the end. Helpful because it catches all the
+                        come usecases for macro expansion
+
+                Add operators to disassembleInstructions in debug.c
+                        Even they are binary operators that take
+                        operands, the arithmetic bytecode instructions
+                        do not which is why it calls simpleInstruction
+
+                Add test code for binary operators in main.c
