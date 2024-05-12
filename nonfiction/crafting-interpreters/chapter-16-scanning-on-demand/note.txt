@@ -1,0 +1,158 @@
+05/10/2024
+
+16.1: Spinning Up the Interpreter
+        Add repl, readFile and runFile functions to main.c
+
+        16.1.1: Opening the Compilation Pipeline
+                Alter interpret function in vm.h / vm.c
+                to take char* source instead of a chunk
+
+                Add compiler.h
+                        compile function
+
+        16.1.2: The Scanner Scans
+                Add scanner.h
+                        initScanner function
+
+                Add scanner.c
+                        initScanner function
+                        Scanner struct
+
+05/11/2024
+                The scanner keeps track of the the current lexeme being
+                scanned(start), the current character being looked at(current),
+                and the line the lexeme is on
+
+16.2: A Token at a Time
+        In jlox, the scanner scanned all tokens and returned a list of
+        of them. This would be harder to do to in clox
+
+        At any point in time, the compiler only needs one or two tokens
+        and we only need a single tokne of lookahead. This means we don't
+        need to keep them all around at the same time. For clox, we will
+        not scan a token until the compiler needs one
+
+        Add scanner logic to compile function in compile.c
+                Ex: print 1 + 2;
+
+                prints out:
+                        1 31 'print'
+                        | 21 '1'
+                        |  7 '+'
+                        | 21 '2'
+                        |  8 ';'
+                        | 39 ''
+
+                The first column is the line number, the second is the numeric
+                value of the token type, and the third is the lexeme. The last
+                empty lexeme on line 2 is the EOF token
+
+        Add scanToken function to scanner.h
+
+        Add Token struct to scanner.h
+
+        Add TokenType enum to scanner.h
+
+        16.2.1: Scanning Tokens
+                Add scanToken function to scanner.c
+
+                Add isAtEnd function to scanner.c
+
+                Add makeToken function to scanner.c
+
+                Add errorToken function to scanner.c
+
+16.3: A Lexical Grammar for Lox
+        Add token logic to scanner.c
+
+        Add advance function to scanner.c
+
+        Add match function to scanner.c
+
+        16.3.1: Whitespace
+                Add skipWhitespace function called to scanToken function
+                in scanner.c
+
+                Add skipWhitespace function to scanner.c
+
+                Add peek function to scanner.c
+
+        16.3.2: Comments
+                Add comment handling in skipWhitespace function in scanner.c
+
+                Add peekNext function in scanner.c
+                        Needed to look ahead to see if we are at the
+                        start of a comment
+        16.3.3: Literal Tokens
+                Add string literal handling case statement in scanToken
+                function in scanner.c
+
+                Add string function in scanner.c
+
+                Unlike jlox, we will not store the actual value of the
+                literal in the Token class itself. This is because in
+                C, we would need to manually manage the memory for
+                a string array and have a union type to support
+                doubles
+
+                We will defer converting the literal lexeme to a runtime
+                value until later. We will only store the lexeme, the
+                character sequence as it appears in the users source code.
+                We will do this right before we are ready to store
+                the value in the chunks constant table.
+
+                Add number literal check in scanToken function in
+                scanner.c
+
+                Add isDigit function in scanner.c
+                Add number function in scanner.c
+
+16.4: Identifiers and Keywords
+        Add identifier check to scanToken function in scanner.c
+
+        Add isAlpha function to scanner.c
+
+        Add identifier function to scanner.c
+
+        Add identifierType function to scanner.c
+
+        How do we determine what type of identifier we have?
+        In jlox, we would store them in a hashmap and compare the
+        the keys.
+
+        In clox, we would have to make our own hashmap and it would
+        be too slow. The next section will cover this
+
+        16.4.1: Tries and State Machines
+                Trie - stores a set of strings
+
+                Typically in other data stuctures for storing strings,
+                they contain the raw character arrays and then wrap them
+                inside some larger construct that helps you search
+                faster. Nowhere in the trie will you find a whole string
+
+                Each string the trie "contains" is represented as a path through                the tree of character nodes. Nodes that match the last
+                character in a string have a special marker
+
+                Tries are a special case of a deterministic finite automaton(DFA)
+                        Also called finite state machine and state machine
+
+                        Have a set of states with transitions between them, forming a graph
+
+                        At any point in time, the machine is "in" exactly one state.
+                        It gets to other states by following transitions
+
+                        When used for lexical analysis, each transition is a
+                        character that gets matched from the string. Each
+                        state represents a set of allowed character
+
+                        Can be arbitrary graphs, more powerful than trees
+
+                        Used by regular expression engines to match strings
+                                Covered in dragon book
+
+                Add trie switch case implementation in identifierType function
+                in scanner.c
+
+                Add checkKeyword function in scanner.c
+
