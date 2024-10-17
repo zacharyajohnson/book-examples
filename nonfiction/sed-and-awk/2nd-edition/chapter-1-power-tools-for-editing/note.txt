@@ -1,0 +1,105 @@
+10/16/2024
+
+May You Solve Interesting Problems
+        Sed and Awk are useful for general
+        solutions to text editing problems
+
+        They have a high learning curve, but
+        in time will be quicker then manual
+        editing
+
+A Stream Editor
+        Sed - a "non interactive" stream oriented editor
+
+        Input flows through it and is directed to
+        standard output
+
+        Input typically comes from a file but can
+        be directed from the keyboard
+
+        Output goes to the terminal screen by default but
+        can be directed to a file
+
+        Works by interpreting a script specifying the actions
+        to be performed
+
+        Offers capabilities that are a natural extension of interactive
+        text editing:
+                Search and replace
+                        Single files
+                        Group of files
+
+        Similar to writing shell scripts
+
+        Can specify editing instructions in one place and then
+        execute them
+
+        Can be used to effectively edit very large files
+
+        Has a few programming constructs to build more complicated scripts
+
+        Has a limited ability to work on more than one line at a time
+
+        Summary
+                Use sed to automate editing actions to be performed on one or
+                more files
+
+                Use sed to simplify the task of performing the same edits
+                on multiple files
+
+                Use sed to write conversion programs
+
+A Pattern-Matching Programming Language
+        Sed
+                Corresponds to how you would edit using
+                a text editor
+
+        Awk
+                Programming language
+
+                Offers a more general way for processing
+                a file
+
+        Example:
+                Transform data into a formatted report
+
+        To get the most out of awk,
+        the data has to have some sort of structure
+
+        Some things awk allows
+                View a text file as a textual database made up of records
+                and fields
+
+                Use variables to manipulate the database
+
+                Use arithmetic and string operators
+
+                Use common programming constructs such as loops
+                and conditionals
+
+                Generate formatted reports
+
+                Define functions
+
+                Execute UNIX commands from a script
+
+                Process the results of UNIX commands
+
+                Process command-line arugments more gracefully
+
+                Work more easily with multiple input streams
+
+Four Hurdles to Mastering Sed and Awk
+        How to use Sed and Awk
+
+        To apply UNIX regular expression syntax
+                Common for sed and awk. Very arcane to use,
+                and no one usually masters regular expressions
+
+        How to interact with the shell
+                Can be frustrating since the shell shares
+                a number of special characters with both
+                programs
+
+        The knack of script writing
+                Takes time to master and lots of examples to do it
