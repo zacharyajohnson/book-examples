@@ -1,0 +1,316 @@
+10/22/2024
+
+Sed and Awk have several things in common
+        Similar syntax
+
+        Both stream-oriented, reading input from text files
+        one line at a time and directing the result to standard
+        output
+
+        Use regular expressions for pattern matching
+
+        Allow user to specify instructions in a script
+
+The similarities are because they originated in the line editor,
+ed.
+
+Sed and Awk differ in the kind of instructions that control the work they
+do. This impacts the kind of tasks both commands can do
+
+Awk, by Sed and Grep, out of Ed
+        Awk originated from Sed/Grep, which originated from ed,
+        the original UNIX line editor
+
+        ed, a line editor. This is different from vi, which is a
+        full-screen editor
+
+        "grep" - global regular expression print
+                Part of ed and then extracted from it and
+                made its own program
+
+        Sed - a special purpose editor that was meant to execute
+        scripts exclusively
+                Unlike ed, cannot be used interactively
+
+                Stream oriented
+                        All input to sed passes through and
+                        goes to standard output
+
+                        The input file itself cannot be changed.
+                        If you want to alter the input file, use
+                        the shell for output redirection and replace
+                        the original file with the modified file
+
+                Goes through the file, line by line, such that each
+                line becomes the current line, and the commands are
+                applied to it
+
+                Commands are similar to whats in ed
+
+                Ex:
+                        s/regular/complex
+                                Substitutes the word regular for
+                                complex
+
+                        In ed, this only works on the current line
+
+                        In sed, this command will be applied to all
+                        lines
+
+                Sed commands are implicitly global
+                        ed command that is equivalent
+                                g/regular/s//complex
+
+                        In sed you are addressing to restrict the
+                        number of lines impacted by a command. In ed,
+                        you are addressing to expand the number of lines
+                        that are impacted by a command
+
+        Awk - developed as a programmable editor that is stream oriented
+        and interprets a script of editing commands
+                Discards the line-editor command set from sed
+                and replaces it with a programming language
+
+                Modeled on the C language
+
+                Ex:
+                        /regular/ { print }
+                                Prints lines matching "regular"
+
+                        Print replaces the p command from ed
+
+                Offers more ways to control what it does compared
+                to sed
+                        Expressions
+
+                        Conditional Statements
+
+                        Loops
+
+                Parses, or breaks up, each input line and makes
+                individual words available for processing with
+                a script
+
+                Made as a programmable editor, but can handle a
+                wide range of tasks
+                        Nawk was created to offer more support
+                        for writing large programs
+                                This version is the POSIX standard
+
+Command-Line Syntax
+        For both Sed and Awk:
+                command [options] script filename
+
+                Can take input from standard input and send
+                the output to standard output
+
+                If a filename is specified, input is taken from
+                that file. The output contains the processed
+                information
+
+                Standard ouput is the display screen, but can
+                also be sent to a file, using I/O redirection in
+                the shell, but it must not go to the same file
+                that supplies input to the program
+
+        The options for both commands are different
+
+        script specifies what instructions to perform
+                If on the command line, it must be surround
+                in single quotes if it contains a space or any
+                characters that might be interpreted by the shell($, *, etc)
+
+        Both commands have the -f option
+                Allows to specify the name of a script file
+
+        Each command reads one input line from the input file, makes a
+        copy of the input line, and executes the instructions specified in
+        the script on the copy
+
+Scripting
+        Short scripts can be specified on the command line
+
+        Longer scripts are usually placed in a file where they
+        can be revised and tested
+
+        For Sed and Awk, each instruction has two parts:
+                Pattern
+                        A regular expression delimited with slashes(/)
+
+                Procedure
+                        Specifies one or more actions to be performed
+
+                For each line of input read, the program reads the
+                the first instruction in the scripts and checks
+                the pattern against the current line. If there is no
+                match, the procedure is ignored and the next instruction
+                is read. If there is a match, then the action or actions
+                specified in the procedure are followed. All of the
+                instructions are read, not just the first instruction
+                that matches the input line.
+
+        When all the applicable instructions have been interpreted and applied
+        for a single line, sed outputs the line and repeats the cycle for
+        each input line. Awk does not automatically output the line; the
+        instructions in your script control what is finally done with it.
+
+        Procedures for each command are different
+                Sed - consists of editing commands like in the line editor.
+                        Most are a single letter
+
+                Awk - consists of programming statements and functions. Must
+                be surrounded by braces
+
+Sample Mailing List
+        The following examples will use the same file, called mail
+        This can be found in resource/mail.txt
+
+Using Sed
+        Two ways to use Sed:
+                Specify instructions on command line
+
+                Or put them in a file and supply the name of the file
+
+        Specifying Simple Instructions
+                Specify simple editing commands on the command line
+                        sed [-e] 'instruction' file
+
+                        -e option is neccessary only when you supply
+                        more than one instruction on the command line
+                                Tells sed to interpret the next argument
+                                as an instruction
+
+                                When there is only one instruction sed
+                                can determine the instruction on its own
+
+                        Ex: replacing "MA" with "Massachusetts"
+                                sed 's/MA/Massachusetts/' resource/mail.txt
+
+                                Three lines are affected by the instruction
+                                but all lines are displayed
+
+                        Not all instructions require single quotes, but
+                        they are a good habit to get into. The following
+                        example requires them
+
+                        Ex: Replace " MA" with ", Massachusetts"
+                                sed 's/ MA/, Massachusetts/' resource/mail.txt
+
+        Three ways to specify multiple instructions on the command line:
+                Seperate instructions with a semicolon
+                        Ex: sed 's/ MA/, Massachusetts/; s/ PA/, Pennsylvania/' resource/mail.txt
+
+                Precede each instruction with -e
+                        Ex: sed -e 's/ MA/, Massachusetts/' -e 's/ PA/, Pennsylvania' resource/mail.txt
+
+                Use the multiline entry capability of the Bourne shell
+                        Don't use, doesn't work in all shells
+
+        Command Garbled
+                Sed commands can be complex and it is easy to make a mistake
+
+                Ex: incomplete syntax in sed command
+                        sed -e 's/MA/Massachusetts' resource/mail.txt
+
+                        sed: command garbled: s/MA/Massachusetts
+
+                        Not very useful as it doesn't tell you whats wrong
+
+                        In newer versions, it seems like this is better
+                                Tested on Linux and Mac
+
+10/30/2024
+
+        Script Files
+                Used when you have multiple sed commands that are too
+                long to enter on the command line
+
+                Ex: Pass in script file to sed(-f)
+                        sed -f scriptfile file
+
+                        resource/sedfile.txt
+
+                        sed -f resource/sedfile.txt resource/mail.txt
+
+                Saving output
+                        Ex: Save sed output to file
+                                sed -f resource/sedfile.txt resource/mail.txt > output
+
+                                Will override output file if it  exists
+
+                Mixing Options(POSIX)
+                        Can combine -e and -f for sed
+
+                        Not clearly documented in UNIX in versions of
+                        sed, but is required by the POSIX Standard
+
+Using Awk
+        Can specify instructions in the command line or in a file similar
+        to sed
+
+        Ex: awk 'instructions' files
+
+        Input is read one line at a time and can be from multiple files
+
+        Instructions are in single quotes
+
+        Multiple commands can be entered by seperating them with
+        semicolons
+
+        Ex: Pass in script file to awk(-f)
+                awk -f script files
+
+        Awk has a similar structure to sed with patterns and
+        procedures, however the procedures themselves are different
+                Statements and functions instead of one or two character
+                procedures
+
+        Interprets each input line as a record and each word on that
+        line, delimited by spaces or tabs, as a field
+                Can be changed
+
+                One or more consecutive spaces or tabs count as
+                a single delimiter
+
+                Allows you to reference these fields in procedures
+                or patterns
+                        $0 - entire line
+                        $1,$2, ... - individual fileds on the line
+
+                Record is split before the script is applied
+
+        Ex: Prints first field of each line
+                awk '{ print $1 }' resource/mail.txt
+
+                no pattern specified
+
+        Ex: Prints each line that matches a pattern
+                awk '/MA/' resource/mail.txt
+
+                Has a pattern but no procedure
+
+                Default procedure is to print each
+                line that matches the pattern
+
+10/31/2024
+
+        Ex: Print first field of each record that contains 'MA' 
+                awk '/MA/ { print $1 }' resource/mail.txt
+
+                Print the first word of each line containing the string "MA"
+
+        Ex: Change field seperator to comma
+                awk -F, '/MA/ { print $1 }' resource/mail.txt
+
+        Ex: Multiple awk commands(Prints fields on each line)
+                awk -F, '{ print $1; print $2; print $3 }' resource/mail.txt
+
+        Sed changed content of data, awk rerranges our data in the examples we have gone over
+
+        Error Messages
+                Can be caused by
+                        Not enclosing a procedure within braces ({})
+
+                        Not surrounding the instructions within single quotes ('')
+
+                        Not enclosing regular expressions within slashes(//)
