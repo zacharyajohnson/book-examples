@@ -1,0 +1,543 @@
+11/03/2024
+
+Regular expression
+        Describes a pattern or a particular sequence of characters
+
+        Does not neccessarily specify a single exact sequence
+
+        Used in grep, sed, and awk
+
+        Uses metacharacters that have special meaning
+
+That's an Expression
+        Ex: 2 + 4
+
+        Tells the computer how to produce a result
+
+        The computer evaluates the expression and returns
+        the result
+
+        A regular expression describes a pattern or sequence of characters
+
+        Concatenation is the basic operation implied in every regular expression
+
+        Ex: ABE
+                "An A followed by a B then followed by an E" or "ABE"
+
+                The term string means each character is concatenated to the
+                one preceding it
+
+        A regular expression describe a sequence of characters, not words
+
+        Regular expressions are not limited to literal characters
+                .: A "wildcard" that matches any single character
+                        Ex: "A.E"
+                                Matches "ACE", "ABE", "ALE", etc
+
+                *: Used to match zero or more occurrences of the preceding regular expression
+                        Typically matches a single character
+
+                        Does not mean anything on its own; it modifies what goes before it
+
+                        Ex: .*
+                                Matches any number of characters
+
+                                Same as the shell metacharacter *(zero or more characters)
+
+                        Ex: "A.*E"
+                                Matches any string that matches "A.E"
+
+                                Matches any number of characters between "A" and "E"
+                                        "AIRPLANE", "A FINE", "A LONG WAY HOME"
+
+                                        Can be zero, "AE"
+
+                Can be used to expand or limit possible matches
+
+A Line-Up of Characters
+        An expressions is made up of:
+                A value expressed as a literal or a variable
+
+                An operator
+
+        Regular expressions are made up of the same thing. Any character, excecpt the
+        metacharacters, are interpreted as a literal that matches only itself
+
+        Metacharacters
+                .
+                        Matches any single character except newline.
+
+                        In awk, dot can match newline also.
+
+                *
+                        Matches any number (including zero) of the single character
+                        (including a character specified by a regular expression) that immediately precedes it
+
+                [...]
+                        Matches any one of the class of characters enclosed between the brackets.
+                        A circumflex(^) as first character inside brackets reverses the match to all
+                        characters except newline and those listend in the class.
+
+                        In awk, newline will also match.
+
+                        A hyphen(-) is used to indicate a range of characters.
+
+                        The close bracket(]) as the first as the first character in class is a member of
+                        the class.
+
+                        All other metacharacters lose their meaning when specified as members of a class
+
+                ^
+                        First character of regular expression, matches the beginning of the line.
+
+                        Matches the beginning of a string in awk, even if the string contains embedded newlines
+
+                $
+                        As last character in regular expression, matches the end of the line.
+
+                        Matches the end of a string in awk, even if the string contains embedded newlines.
+
+                \{n,m\}
+                        Matches a range of occurrences of the single character
+                        (including a character specified by a regular expression) that immediately precedes it.
+
+                        \{n\} will match exactly n occurrences
+
+                        \{n,\} will match at least n occurrences
+
+                        \{n,m\} will match any number occurrences between n and m
+                                sed and grep  ony, may not be in some very old versions
+
+        Extended Metacharacters (egrep and awk)
+                +
+                        Matches one or more occurrences of the preceding regular expression
+
+                ?
+                        Matches zero or one occurrences of the preceding regular expression
+
+                |
+                        Specifies that either the preceding or following regular expression can
+                        be matched(alternation)
+
+                ()
+                        Groups regular expressions
+
+                {n,m}
+                        Matches a range of occurrences of the single character
+                        (including a character specified by a regular expression) that
+                        immediately precedes it.
+
+                        {n} will match exactly n occurrences
+
+                        {n,} will match at least n occurrences
+
+                        {n,m} will match any number of occurrences between n and m
+
+                        POSIX egrep and POSIX awk, not in traditional egrep or awk
+
+        Metacharacters have a special meaning in regular expressions
+        (like operators in arthimetic expressions)
+
+        The Ubiquitous Backslash
+                Transforms metacharacters into ordinary characters
+                (and ordinary characters into metacharacters)
+
+                Forces the literal interpretation of any metacharacter such that it will
+                match itself
+
+                Ex: \.
+                        Matches a period
+
+                Ex: \\
+                        Matches a backslash
+
+                Sed uses it to cause a group of ordinary character to be interpreted as
+                metacharacters
+
+        A Wilcard
+                Dot(.)
+
+                Can be thought as a variable that represents any value in an arithmetic expression
+
+                Wildcard that represents any character except the newline
+                        In awk, dot can even match an embedded newline character
+
+        Writing Regular Expressions
+                Individual pieces of a regular expression are easy to understand,
+                but they can be combined into something that is complex
+
+                Process of writing regular expressions
+                        Knowing what it is you want to match and how it might appear in the text
+
+                        Writing a pattern to describe what you want to match
+
+                        Testing the pattern to see what it matches
+
+                        Evaluation
+                                Hits
+                                        The lines that I wanted to match
+
+                                Misses
+                                        The lines that I didn't wanted to match
+
+                                Omissions
+                                        The lines that I didn't match but wanted to match
+
+                                False Alarms
+                                        The lines that I matched but didn't want to match
+
+                        Try to eliminate false alarms by limiting the possible matches
+
+                        Try to capture omissions by expanding the possible matches
+
+        Character Classes
+                Can list the characters to be matched
+
+                [] enclose the list of characters
+
+                Each class only matches a single character
+
+                Ex: Matching the string "what" or "What"
+                        [Ww]hat
+
+                Ex: Match ".H1", ".H2", ".H3", ".H4", and ".H5"
+                        \.H[12345]
+
+                Same syntax is used in UNIX shell
+
+                ] is interpreted as part of the class if it is the first character listed
+
+                Special Characters in Character Classes
+                        \
+                                Escapes any special character(awk only)
+
+                        -
+                                Indicates a range when not in the first or last position
+
+                        ^
+                                Indicates a reverse match only when in the first position
+
+                A Range of Characters
+                        Hyphen character(-)
+
+                        Specify a range of characters
+
+                        Ex: All uppercase English letters
+                                [A-Z]
+
+                        Ex: All single digit numbers
+                                [0-9]
+
+                        Ex:
+                                Any single character that is numeric, lowercase alphabetic,
+                                or a question mark, comma, period, semicolon, single quote, or
+                                quotation mark
+
+                                [0-9a-z?,.;:'"]
+
+                        Ex:
+                                Any lowercase or uppercase letter followed by either a period,
+                                a question mark, or an exclamation mark
+
+                                [a-zA-Z][.?!]
+
+                        Loses its special meaning within a class if it is the first or last character
+
+                        Ex: Match arithmetic operators(- must be first)
+                                [-+*/]
+
+                        Ex: Match date format MM-DD-YY or MM/DD/YY
+                                [0-1][0-9][-/][0-3][0-9][-/][0-9][0-9]
+
+                Excluding a Class of Characters
+                        Circumflex(^) as the first character in the class excludes all of the
+                        characters in the class from being matched
+
+                        Any character except newline that isn't listed in the brackets is matched
+
+                        Ex: Match any non-numeric character
+                                [^0-9]
+
+                        Ex: Match any consonant
+                                [^aeiou]
+
+                        Ex:
+                                The string ".DS" followed by a space, a quote followed by
+                                any character other than the number "1," followed by a quote
+
+                                \. DS "[^1]"
+
+                                Matches .DS "I", .DS "2", but not .DS "1"
+
+                POSIX Character Class Additions
+                        POSIX standard formalizes the meaning of regular expression
+                        characters and operators
+
+                                Two classes of regular expressions
+                                        Basic Regular Expressions(BRE)
+                                                Used by grep and sed
+
+                                        Extended Regular Expressions
+                                                Used by egrep and awk
+
+                                Enhances the ability of character classes to match characters not in
+                                English
+
+                                Provides sequences of characters that should be treated as a single unit
+                                when matching and collating (sorting) string data
+
+                                Changed terminology
+                                        character class -> bracket expression
+
+                                Bracket expressions can have the following in POSIX
+                                        Character Classes
+                                                Consists of keywords bracketed by [: and :]
+
+                                                Describe different classes of characters such as
+                                                alphabetic characters, control characters, etc
+
+                                        Collating Symbols
+                                                A multicharacter sequence that should be treated as a unit
+
+                                                Characters bracketed by [. and .]
+
+                                        Equivalence classes
+                                                A set of characters that should be considered equivalent
+
+                                                Consists of a named element from the locale, bracketed by [= and =]
+
+                                All three of these constructs must appear inside square brackets of a bracket
+                                expressions
+                                        Ex: Matches any single alphabetic character  or the exclamation point
+                                                [[:alpha:]!]
+
+                                        Ex:
+                                                Matches the collating element ch, but does not match the
+                                                letter c or the letter h
+
+                                                [[.ch]]
+
+                                        Ex: e in french locale
+                                                [[=e=]]
+
+                                POSIX Character Classes
+                                        [:alnum:]
+                                                Printable characters (includes whitespace)
+
+                                        [:alpha:]
+                                                Alphabetic characters
+
+                                        [:blank:]
+                                                Space and tab characters
+
+                                        [:cntrl:]
+                                                Control characters
+
+                                        [:digit:]
+                                                Numeric characters
+
+                                        [:graph:]
+                                                Printable and visible (non-space) characters
+
+                                        [:lower:]
+                                                Lowercase characters
+
+                                        [:print:]
+                                                Printable characters (includes whitespace)
+
+                                        [:punct:]
+                                                Punctuation characters
+
+                                        [:space:]
+                                                Whitespace characters
+
+                                        [:upper:]
+                                                Uppercase characters
+
+                                        [:xdigit:]
+                                                Hexadecimal digits
+
+                                At the time this book was written, these features weren't widely support.
+                                Now that POSIX is more wide spread, they should be supported everywhere now
+
+                                The book will use the term "character class" to refer to list of characters in square
+                                brackets instead of the POSIX definition and will not rely on the POSIX features
+
+        Repeated Occurences of a Character
+                Asterisk(*)
+
+                Indicates that preceding regular expression may occur zero or more times
+
+                Ex: Match "hypertext" whether or not its in quotes
+                        "*hypertext"*
+
+                If the literal character modified by the asterisk does exist, there could be
+                more than one occurence
+
+                Ex: Match 1,5,10,50,100,500,1000,5000 and many more
+                        [15]0*
+
+                Ex: Match one or more spaces
+                        <space><space>*
+
+                        The first space is literal and is needed so we
+                        don't match on zero or more spaces(<space>*)
+
+                Ex: Match any string inside quotation marks
+                        ".*"
+
+        What's the Word? Part 1
+                It can be difficult to match a complete work
+
+                Searching for "book" would also match "bookish", "handbook" and "booky"
+
+                <space>book<space> would only match "book" and not
+                plural "books"
+
+                <space>books*<space> would match "book" or "books". However
+                it will not match "book" if it is follwed by a period, a comma,
+                a question mark, or a quotation mark
+
+                <space>book.*<space> would match "book" followed by "any number
+                of characters or none followed by a space." This would also match
+                words such as "booky", "bookworm", and "bookish"
+
+                To get rid of "bookish" and "bookworm", we could use ?
+                <space>book.?<space> would match "book", "books", and "booky"
+                ? matchs 0 or 1 occurences of a preceding character
+
+                To get rid of "booky", we would need to use character classes
+                to specify all the characters in that position that we want
+                to match
+
+                sed doesn't have ? so we would have to use character classes for that
+                too if using it
+
+
+        Positional Metacharacters
+                Specifies the context in which a string appears
+
+                ^
+                        Indicates beginning of the line
+
+                        Ex: Match any line that starts with a tab
+                                ^<tab>
+
+                $
+                        Indicates end of a line
+
+                        Ex: Match any line thats one or more spaces at the end
+                                <space><space>$
+
+                Called "anchors" because they anchor, or restrict, the match
+                to a specific position
+
+                Ex: Match blank lines
+                        ^$
+
+                Ex: Match blank lines even if it includes spaces
+                        ^<space>*$
+
+                Ex: Match entire line
+                        ^.*$
+
+                In sed and grep, ^ and $ are only special when they occur at the beginning or end
+                of a regular expression
+
+                        "^abc" matches a, b, and c at the beginning of the line
+
+                        "ab^c" matches a,b, a literal ^, and c
+
+                In awk, ^ and $ are always special. If you need these as literals, you must
+                escape with a backslash, no matter what position in the regular expression
+
+                Phrases
+                        A pattern-matching program such as grep does not match a string if it extends
+                        over two lines
+
+                        It can hard to match phrases if is split up over two lines
+
+                        Ex:
+                                Almond Joy
+
+                                Almond$
+                                ^Joy
+
+                                This isn't perfect as the second regular expression will match
+                                "Almond" at the end of a line, regardless of whether or not the next
+                                line begins with "Joy"
+
+                                Similiar problem with the third expression
+
+                        There is a way in sed to match patterns over multiple lines that will be
+                        covered later
+
+        A Span of Characters
+                *, +, ? are metacharacters that specify repated occurrences of a character
+
+                Ex: 11*0
+                        Matches 10, 110, 1111110, 1111111110 and so on
+
+                \{ and \} specify a minimum and maximum number of occurrences of a literal character or regular expression
+                        Used in grep and sed
+
+                POSIX egrep and POSIX awk use { and }
+
+                Braces enclose two arguments
+                        \{n,m\}
+
+                        n and m are integers between 0 and 255
+
+                        If n is specified by itself, then exactly n characters
+                        of the preceeding character or expression will be matched
+
+                        If \{n,\}, then at least n occurrences will be matched
+
+                        If \{n,m\}, then any number of occurrences between n and m will be
+                        matched
+
+                        Ex: 10\{2,4\}1
+                                Matches 1001, 10001, and 100001 but not 101 or 1000001
+
+                        Can be used to match formatted ata such as phone numbers, US social security
+                        numbers, etc
+
+                        Ex: Social Security Number
+                                3 digits, a hyphen, 2 digits, a hyphen, and four digits
+
+                                [0-9]\{3\}-[0-9]\{2\}-[0-9]\{4\}
+
+                        ? is equivalent to \{0,1\}
+                        * is equivalent to \{0,\}
+                        + is equivalent to \{1,\}
+
+        Alternative Operations
+                Vertical bar(|)
+
+                Extended metacharacter set
+
+                Specify a union of regular expressions
+
+                Ex: UNIX or LINUX expression
+                        UNIX|LINUX
+
+                Ex: UNIX or LINUX or NETBSD
+                        UNIX|LINUX|NETBSD
+
+                In sed, this is not supported, so each pattern must
+                be inputed seperatly
+
+        Grouping Operations
+                Parentheses ()
+
+                Extended metacharacter set
+
+                Group regular exprsessions and establish precedence
+
+                Ex: "BigOne" or "BigOne Computer"
+                        BigOne(<space>Computer)>
+
+                Can use parentheses with a vertical bar to group alternative
+                operations
+                        Ex: Match company or companies
+                                compan(y|ies)
