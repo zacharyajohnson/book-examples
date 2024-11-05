@@ -1,0 +1,224 @@
+11/03/2024
+
+To use sed, you write a script that contains a series of editing actions
+and then you run the script on an input file
+
+Take what would be hands-on procedure in an editor and do it automatically
+via a script
+
+Steps to follow when writing a sed script
+        Think through what you want to do before you do it
+
+        Describe unambiguously, a procedure to do it
+
+        Test the procedure repeatedly before comitting to any final chagnes
+                Use different input samples and observe the results
+
+Three basic principles of sed
+        All editing commands in a script are applied in order to each line of input
+
+        Commands are applied to all lines (globally) unless line addressing restricts
+        the lines affected by editing commands
+
+        The original input file is unchanged; the editing commands modifiy a copy of original
+        input and the copy is sent to standard output
+
+Applying Commands in a Script
+        Combining a series of edits in a script can have unexpected results
+
+        New users typically think that sed applies an individual editing command to
+        all lines of input before applying the next editing command.
+        Instead, sed applies the entire script to the first input line before reading
+        the second input line and applying the editing script to it
+
+        Ex:
+                s/pig/cow/g
+                s/cow/horse/g
+
+                Will change all instances from pig to cow. However will then
+                change cow(formely pig) to horse as well so we will only have horse
+                in the lines
+
+        The Pattern Space
+                A workspace or temporary buffer where a single line of input is held while
+                editing commands are applied
+                        Makes reading large files very efficent
+
+                The space contains a copy of a single input line. The first command in the
+                script is applied o the line, then the second, etc. When all instructions
+                are applied, the current line is output and the the next line of input is
+                read into the the pattern space. Then all the commands in the script are
+                applied to that line.
+
+                Now that we know more abou it, the example above makes sense why everything ended up
+                as horse
+
+                To fix this we would just have to reverse the order of the commands
+                        s/cow/horse/g
+                        s/pig/cow/g
+
+                Ex:
+                        Script
+                                s/Unix/UNIX/
+                                s/UNIX System/UNIX Operating System/
+
+                        Pattern Space
+                                The Unix System
+                                      |
+                                The UNIX System
+                                      |
+                                The UNIX Operating System
+11/04/2024
+
+A Global Perspective on Addressing
+        Sed is implicitly global, unlike ed, ex, or vi
+                Will apply commands to each line
+
+        Ex: Global substitution from CA to California
+                s/CA/California/g
+
+                In sed, without g only the first instance of
+                the match in the line will be changed.
+
+                It still goes through each line and subsitutes by
+                default though
+
+        This is because each line in sed has the commands
+        applied to it as sed processes the input
+
+        Line addresses are used to supply context for, or restrict, an
+        operation. In vi, the opposite is true and you must tell it
+        which lines to operate on
+
+        Ex: Limit subsitution to lines containing "Sebastopol"(address)
+                /Sebastopol/s/CA/California/g
+
+                "Sebastopol, CA" would match but "San Francisco, CA" won't
+
+        A sed command can specify zero, one, or two addresses. An address can
+        be a regular expression describing a pattern, a line number, or a line addressing
+        symbol.
+
+        If no address is specified, then the command is applied to each line
+
+        If there is only one address, the command is applied to any line matching
+        the address
+
+        If two comma-seperated addresses are specified, the command is performed
+        on the first line matching the first address and all succededing lines up
+        to and including a line matching the second address
+
+        If an address is followed by an exclamation (!), the command is applied
+        to all lines taht do not match the address
+
+        Ex: d (delete command)
+                d
+                        delete all lines
+
+                1d
+                        deletes only the first line
+
+                $d
+                        Delete the last line
+
+                        $ is different in this context then used
+                        in a regex ($ being there end of the line)
+
+        Ex: Delete blank lines
+                /^$/d
+
+        Ex: Deletes all lines blocked by a pair of macros
+                /^\.TS/,/^\.TE/d
+
+                Deletes all lines beginning with the line matched by
+                the first pattern and up to and including the
+                line matched by the second pattern
+
+                Lines outside the range are not affected
+
+        Ex: Deletes from line 50 to the last line
+                50,$d
+
+        Ex: Delete from first line up to and including the first blank line
+                1,/^$/d
+
+        The first address can be thought as enabling the action and the second
+        address as disabling it. Sed has no way of looking ahead to determine if
+        the second match will be made. The action will be applied to lines once
+        the first match is made. The command will be applied to all subsequent lines
+        until the second match is made.
+
+        Ex:
+                If 1,/^$/d matched no blank lines, the entire file would be deleted
+
+        Ex: Deletes all lines except in tags
+                /^\.TS/,/^\.TE/!d
+
+        Grouping Commands
+                Braces ({}) can be used in sed to nest one address inside another or to
+                apply multiple commands at the same address
+
+                Ex: Deletes blank lines inside TS and TE tags
+                        /^\.TS/,/^\.TE/{
+                                /^$/d
+                        }
+
+                Ex: Deletes blank lines, and subsitute inside TS and TE tags
+                        /^\.TS/,/^\.TE/{
+                                /^$/d
+                                s/^\.ps 10/.ps 8/
+                                s/^\.vs 12/.vs 10/
+                        }
+
+                The opening curly brace must end a line and the closing
+                curly brace must be on a line by itself. Be sure
+                there are no spaces after the braces
+
+Four Types of Sed Scripts
+        Multiple Edits to the Same File
+
+        Making Changes Accross a Set of Files
+
+        Extracting Contents of a File
+                p(print) command
+
+        Generating an Outline
+
+Getting to the PromiSed Land
+        Tips:
+                Know Thy Input!
+                        Carefully examine your input file, using grep,
+                        before designing your script
+
+                Sample Before Buying
+                        Start with a small sample of occurrences in a test
+                        file.
+
+                        Run your script on the same and make sure the script
+                        is working.
+
+                        Remember, it's just as important to make sure the
+                        script doesn't work where you don't want it to
+
+                        Then increase the size of the sample. Try to
+                        increase the complexity of the input
+
+                Think Before Doing
+                        Work carefully, testing each command that you add
+                        to a script.
+
+                        Compare the output against the input file to see
+                        what has changed.
+
+                        Prove to yourself that the script is complete.
+                        Your script may work perfectly, based on your
+                        assumptions of what is in the input file, but
+                        your assumptions may be wrong
+
+                Be Pragmatic!
+                        Try to accomplish what you can with your sed
+                        script, but it doesn't have to do 100 percent
+                        of the job. If you encounter difficult situations,
+                        check and see how freuently they occur.
+                        Sometimes its better to do a few remaining edits
+                        manually.
