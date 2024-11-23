@@ -1,0 +1,492 @@
+11/11/2024
+
+Look at ways to change control flow
+        (i.e, determine which command is executed next)
+
+About the Syntax of Sed Commands
+        Ex: [address]command
+                An address can be a pattern described as
+                a regular expression surrounded by slashes,
+                a line number, or a line-addressing symbol
+
+        Most commands can accept two comma-seperated addresses
+        that indicate a range of lines
+
+        A few commands only accept a single line address. They cannot
+        be applied to a range of lines
+                Ex: [line-address]command
+
+        Commands can be grouped at the same addres by surrounding the list of
+        commands in braces:
+                Ex:
+                        address {
+                                command1
+                                command2
+                                command3
+                        }
+
+                Each command can have its own address and multiple levels
+                of grouping are permitted
+
+        Adding a space after a command is not allowed; the end of a command
+        must be at the end of the line
+
+        Multiple sed commands can be placed on the same line if each one is
+        seperated by a semicolon
+                Ex:
+                        n;d
+
+                        Placing a space after the n command causes a syntax error.
+                        Putting a space before the d command is okay
+
+                        Not documented in POSIX but is the standard behavior
+
+                Highly discouraged, commands can be complex on their own
+
+                The change, insert, and append commands must be specified
+                over multiple lines and cannot be specified on the same line
+
+Comment
+        System V version
+                Only on first line of a script
+
+        GNU version
+                Comments anywhere
+
+        Line starts with octothorpe(#)
+                Ex:
+                        #[n]
+
+                        # wstar.sed: convert WordStar files
+
+        Can be continued on multiple lines by ending the preceding line with a backslash
+
+        If the next character following # is n, the script will not automatically produce output.
+        It is equivalent to specifying the command-line option -n. The rest of the line following
+        the n is treated as a comment.
+                POSIX Standard: #n must be first two characters of a file
+
+Substitution
+        Ex:
+                [address]s/pattern/replacement/flags
+
+                flags:
+                        n
+                                a number (1 to 512) indicating that a replacement should be made for
+                                only the nth occurence of the pattern
+
+                        g
+                                Make changes globally on all occurrences in the pattern space.
+                                Normally only the first occurrence is replaced
+
+                        p
+                                Print the contents of the pattern space
+
+                        w file
+                                Write the contents of the pattern space to file
+
+        Applied to the lines matching the address
+
+        If no address is specified, it is applied to all
+        lines that match the pattern, a regular expression
+
+        If a regular expression is supplied as an address, and no pattern is specified, it
+        matched what is matched by the address
+                Useful when the substitute command is one of multiple commands applied at
+                the same address
+
+        Addresses require a slash(/) as a delimiter
+
+        The pattern can uses any character except a newline as a delimeter
+                Ex:
+                        s!/usr/mail/!/usr2/mail!
+
+                Delimeter is required after the replacement
+
+        Replacement
+                A string of characters that will replace what is matched by the regular
+                expression pattern
+
+                Characters that have special meaning in replacement:
+                        &
+                                Replaced by the string matched by the regular expression
+
+                        \n
+                                Matches the nth substring (n is a single digit) previously
+                                specified in the pattern using "\(" and "\)"
+
+                        \
+                                Used to escape ampersand (&), the backslash(\), and the
+                                substitution command's delimiter when they are used literally
+                                in the replacement section
+
+                                Can be used to escape the newline and create a
+                                multiline replacement string
+
+        Flags
+                Can be used in combination where it makes sense
+
+                Ex:
+                        global replacement plus print line
+
+                print(p) and write(w)
+                        Only print / write on a successful substitution
+
+                        Since the default action is to pass through all lines,
+                        regardless of what action is taken, the print and write
+                        flags are used when the -n option is used
+
+                        If a script contains multiple substitute commands that
+                        match the same line, multiple copies of that line will be
+                        printed or written to the file
+
+                numeric flag
+                        Used when a regular expression repeats itself on a line and the
+                        replacement must be made for only one of those occurrences by
+                        position
+
+                        Ex:
+                                s/<tab>/>/2
+
+                                Replaces the 2nd occurence of the tab character
+
+                        1 can be considered the default numeric flag since the command replaces
+                        the first occurence of a pattern by default
+
+        Replacement Metacharacters
+                backslash(\)
+                        Can be used to include a newline in a replacement string
+                                Ex:
+                                        s/<tab>/\
+                                        /2
+
+                        Add metacharacters as literals in replacement string
+                                Ex:
+                                        s/ORA/O'Reilly \& Associates, Inc./g
+
+                ampersand(&)
+                        Represents the extent of the pattern match, not the line that was matched
+
+                        Ex:
+                                s/UNIX/\\s-2&\\s0/g
+
+                                changes this line "on the UNIX operating system"
+                                to "on the \s-2UNIX\s0 Operation System"
+
+                        Useful when a regular expression matches variations of a word.
+                        Allows to specify a variable replacement string that corresponds
+                        to what was actually matched
+
+                        Ex:
+                                s/See Section [1-9][0-9]*\.[1-9][0-9]*/(&)/
+
+                                Wraps "See Section ..." in parenthesis
+
+                "\(" and "\)"
+                        Pair of escaped parentheses
+
+                        Used to enclose any part of a regular expression and save it for recall 
+
+                        Nine "saves" are permitted for a single line
+
+                        "\n" is used to recall the portion of the match was saved, where n is a number
+                        from 1 to 9 referencing a particular "saved" string in order of use
+
+                        Ex:
+                                s/\(See Section \)\([1-9][0-9]*\.[1-9][0-9]*\)/\1\\fB\2\\fp/
+
+                                \1 references "See Section "
+                                \2 references the number portion
+
+                        Can be referenced in any order
+11/12/2024
+
+Delete
+        Takes an address and deletes the contents of the pattern space
+        if the line matches the address
+
+        Can change the flow of control in a script
+                Once executed, no further commands are executed on the
+                "empty" pattern space
+
+                Causes a new line of input to be read and a new pass on the
+                editing script to begin from the top
+
+        If the line matches the address, the entire line is deleted, not just
+        the portion of the line that is matched
+                That is what the substitute command is used for
+
+        Ex: Delete all blank lines
+                /^$/d
+
+Append, Insert, and Change
+        All of these must be specified over
+        multiple lines
+
+        append
+                [line-address]a\
+                text
+
+                single line address
+
+        insert
+                [line-address]i\
+                text
+
+                single line adderess
+
+        change [address]c\
+                text
+
+                Range of lines
+
+        For all these commands, a backslash is required at the first
+        end of line. The text must begin on the next line
+
+        To input multiple lines of text, each successive liine must end with
+        a backslash. If the text contains a literal backslash, add an extra
+        backslash to escape it
+
+        Ex: Insert two lines of text at a line matching "<Larry's Address>"
+                /<Larry's Address>/i\
+                4700 Cross Court\
+                French Lick, IN
+
+11/19/2024
+        Change replaces all addressed lines with a single copy of the text
+                Deletes each line in the range but the supplied text is
+                output only once
+
+                Ex: Remove mail-message header and replaces it
+                        /^From /,/^$/c\
+                        <Mail Header Removed>
+
+                Ex:
+                        /^From /,/^$/{
+                                s/^From //p
+                                c\
+                                <Mail Header Removed>
+                        }
+
+                        Will output "<Mail Header Removed>" for each line in the range
+
+                Clears pattern space(Same as delete). No command following the change command
+                in the script is applied
+
+List
+        (l) command
+
+        Displays the contents of the pattern space, showing
+        non-printing characters as two-digit ASCII codes
+
+        Can be used to detect "invisible" characters in the input
+
+        Ex:
+                sed -n -e "l" file
+
+Transform
+        Transforms each character by position in string abc to its equivalent
+        in string xyz
+
+        Ex:
+                [address]y/abc/xyz
+
+                Has no idea of a "word"
+
+                Replaces "a" by "x" anywhere on the line,
+                regardless of whether or not it is followed by a "b"
+
+        Ex: Replace lowercase letters with uppercase
+                y/abcdefghijklmnopqrstuvwxyz/ABCDEFGHIJKLMNOPQRSTUVWXYZ
+
+        Replaces entire contents of the pattern space. If you want to convert
+        a single word on the input line, you could do it by using the hold
+        space
+
+11/23/2024
+
+Print
+        (p) command
+
+        Prints the contents of the pattern space
+
+        Does not clear the pattern space nor does it change the flow of
+        control in the script
+
+        Duplicate lines are printed unless the -n flag is used
+                Used when default output is surpressed or when
+                the flow control through the program avoids
+                reaching the bottom of the script
+
+        Ex:
+                /^\.Ah/{
+                        p
+                        s/"//g
+                        s/^\.Ah //p
+                }
+
+                Prints changes before and after
+                substitution changes
+
+                Substitution p flag only prints
+                when a substitute is successful
+
+                .Ah "Comment"
+                Comment
+
+                .Ah "Substitution"
+                Substitution
+
+Print Line Number
+        Equal sign(=) following an address prints the line number
+        of the matched line
+
+        If -n isn't used the line number and the line itself is
+        printed
+
+        Ex:
+                [line-address]=
+
+        Ex: Prints the line number + line for each line that matches
+                #n print line number and line with if statement
+
+                /       if/{
+                        =
+                        p
+                }
+
+                192
+                        if ( rand_type == TYPE_0 ) {
+
+                234
+                        if (rand_type == TYPE_0 ) state[-1] = rand_type;
+
+Next
+        (n) command
+
+        Outputs the contents of the pattern space and then reads
+        the next line of input without return to the top of the script
+
+        Ex:
+                [address]n
+
+        Changes normal flow. Current line in pattern space is replaced
+        by the next one. Subsiquant commands impact the next line
+
+        Ex:
+                .H1 "On Egypt"
+
+                Napoleon, pointing to the Pyramids, said to his troops:
+                "Soldiers, forty centuries have their eyes upon you."
+
+                Removes blank line:
+                        /^\.H1/{
+                                n
+                                /^$/d
+                        }
+
+Reading and Writing Files
+        (r) and (w) commands
+
+        Allow you to work with files
+
+        Ex:
+                [line-address]r file
+
+                [address]w file
+
+        Single space between command and file name. Any extra spaces
+        are interpreted to be part of the file name
+
+        Read
+                Reads the contents of file into the pattern space after
+                the addressed line
+
+                Cannot operate on a range of lines
+
+                Will not complain if a file does not exist
+
+                Useful for inserting the contents of one file
+                at a particular  place in another file
+
+                Ex: Appends company.list file after line
+                        /^<Company-List>/r company.list
+
+                No subsequent command will affect
+                the lines read from the file.
+                Commands that target the original lines
+                still work
+
+        Write
+                Writes the contents of the pattern space to
+                file
+
+                Will create a file if it does not exist
+
+                If a file alrady exists, the write command
+                will overwrite it each time the script is
+                invoked
+
+                If there are multiple isntructions writing
+                to the same file in one script, then each
+                write command appends to the file
+
+                Can only open up to 10 files per script
+
+                Ex: Write to different files based on criteria
+                        Adams, Henrietta        Northeast
+                        Banks, Freda            South
+                        Dennis, Jim             Midwest
+                        Garvey, Bill            Northeast
+                        Jeffries, Jane          West
+                        Madison, Slyvia         Midwest
+                        Sommes, Tom             South
+
+                        /Northeast$/w region.northeast
+                        /South$/w region.south
+                        /Midwest$/w region.midwest
+                        /West$/w region.west
+
+                Writes out the contents of the pattern space
+                when the command is invoked not when the
+                end of the script is reached
+
+                Ex: Execute command and then write to file
+                        /Northeast$/{
+                                s///
+                                w region.northeast
+                        }
+
+                        Replaces "Northeast" with nothing
+                        and then writes to file
+
+Quit
+        (q) command
+
+        Causes sed to stop reading new input lines
+        (and stop sending them to the output).
+
+        [line-address]q
+
+        Once the line matching address is reached, the
+        script will be terminated
+
+        Ex: Prints the first 100 lines and then quits
+                sed '100q' test
+
+        The following example:
+                for file
+                do
+                        sed 10q $file
+                done
+        is more performant than
+                for file
+                do
+                        sed -n 1,10p $file
+                done
+        since the second example is still iterating
+        through the entire file in the background.
+        It just prints the lines that are 1-10
+
+        Useful when you don't need to process through
+        the entire file when you find a match
