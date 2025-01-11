@@ -1,0 +1,160 @@
+08/28/2024
+
+This chapter will:
+        Create compiler that will parse source code and output a low-level series of
+        binary instructions
+
+        Show Vaughan Pratt's "top-down operator precedence parsing" algorithim (Pratt parser)
+                Handles prefix, postfix, infix, mixfix precendence
+
+Add chunk initalization and data population code to interpret function in vm.c
+
+Add chunk* argument to compile function in compiler.h and compiler.c 
+
+Remove logic in compile function in compiler.c and replace it with the advance, expression,
+and consume function stubs
+
+17.1: Single-Pass Compilation
+        Compiler has two jobs:
+                Parses user's source code to understand what it means
+
+                Takes source code and outputs low-level instructions that produce
+                the same semantics as the source code
+
+        Many languages split this into two roles into two seperate passes in the
+        implementation
+                Parser produces an AST(like jlox)
+                Code generator traverses the AST and outputs target code
+
+        For clox, we will merge these two setps into one. This was historically done
+        because computers didn't have enough memory to store an AST. We are doing it
+        to keep our compiler simpler
+
+        Have downsides, the language must be designed in such a way that it doesn't
+        need much surrounding context to understand a piece of syntax
+
+17.2: Parsing Tokens
+        Add implementation for advance function in compiler.c
+
+        Add Parser struct to compiler.c
+
+        17.2.1: Handling Syntax Errors
+                At errorAtCurrent, error, and errorAt functions to compiler.c
+
+                Add hadError flag to Parser struct in compiler.c
+
+                Add return !parser.hadError line to compile function in compiler.c
+
+                Add panicMode flag to Parser struct in compiler.c
+                        Used if the parser encounters an error in case it
+                        gets confused where it is in the grammer. Prevents
+                        nonsense errors after the initial one
+                        
+                        Panic mode ends when the parser reaches a synchronization
+                        point. For lox it will be statement boundaries
+
+                        Add check in errorAt function in compiler.c
+                        Add setting it to true in errorAt function in compiler.c
+
+                        Set these to false in compile function in compiler.c
+
+                Add stdlib.h import in compiler.c
+
+                Add consume function in compiler.c
+                        Foundation for most syntax errors in the compiler
+
+17.3: Emitting Bytecode
+        After a user's program is translated, the next step is to translate it
+        to a series of bytecode instructions
+
+        Add emitByte, writeChunk, and currentChunk functions to compiler.c
+
+        Set compiling chunk to passed chunk in from vm in compiler.c compile function
+
+        Add endcompiler and emitReturn functions to compiler.c
+                These are needed since we use the OP_RETURN instruction
+                to emit values. This will be changed in the future
+
+        Add endcompiler function call to compile function in compiler.c
+
+        Add emitBytes function to compiler.c
+
+01/10/2025
+17.4: Parsing Prefix Expressions
+        Add expression function in compiler.c
+
+        17.4.1: Parsers for Tokens
+                Create number function in compiler.c
+
+                Create emitConstant function in compiler.c
+
+                Create makeConstant function in compiler.c
+
+        17.4.2: Parentheses for Grouping
+                Add grouping function in compiler.c
+
+        17.4.3: Unary Negation
+                Add unary function in compiler.c
+
+                An issue we have now is:
+                        -a.b + c
+
+                Currently the parser will parse (a.b +c ) before
+                applying the unary -. Instead it should apply it
+                to a.b and then add to c
+
+                We have to define operator precedence somehow so
+                if the compiler encounters operators with lower
+                precedence then the - it won't compile them
+                before the unary.
+
+                Add parsePrecedence function to compiler.c
+
+                Add Precedence enum to compiler.c
+                        The further down the list you are in the enum
+                        the higher precdence you have
+
+                        Ex: Unary has less precdence then a call (. ())
+                            so the compiler will evaluate them but nothing
+                            above unary
+
+                Replace expression call in unary function with
+                parsePrecedence(PREC_UNARY);
+                        Allows nested unary expressions too
+
+17.5: Parsing Infix Expressions
+        Example: Binary operators
+
+        With infix expressions, we don't know we're in the middle of
+        a binary operator until after we've parsed its left operand
+        and then stumbled onto the operator token in the middle
+
+        Add binary function to compiler.c
+
+17.6: A Pratt Parser
+        We need a table that will
+                Have a function to compile a prefix expression starting with a
+                token of that type
+
+                Have a function to compile an infix experssion whose left
+                operand is followed by a token of that type
+
+                Have the precedence of an infix expression that uses that
+                token as an operator
+
+        Create ParseRule struct in compiler.c
+                Single rule in parser table
+
+        Add ParseFn typedef in compiler.c
+                Function pointer
+
+        Add ParseRules table in compiler.c
+                Associates tokens with functions they call
+                for different operations plus operator precedence
+                if applicable
+
+17.6.1: Parsing with Precedence
+        Add implementation to parsePrecedence function in compiler.c
+
+17.7: Dumping Chunks
+        Add chunk debug call in compiler.c after chunk is created from source
