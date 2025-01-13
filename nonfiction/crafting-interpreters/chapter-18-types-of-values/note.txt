@@ -1,0 +1,167 @@
+01/12/2025
+
+Lox is dynamically typed. A variable can be
+        Boolean
+        number
+        String
+
+By the end of this chapter, we will support
+Boolean and nil
+
+18.1: Tagged Unions
+        Need to answer two questions
+                How do we represent the type of a value?
+                        Error detection if types mismatch, etc
+
+                How do we store the value itself?
+
+        Ideally it needs to be efficient as well
+
+        Add ValueType enum to value.h
+                Defines type of values vm supports
+
+        Need to also store the data for each type
+                double for a number
+
+                true or false for a Boolean
+
+                Could define a struct with fields
+                for each type but its a waste of memory.
+                A value can't simultaneously be both a number
+                and a Boolean. Only one of those fields would
+                be used at a time
+
+        C lets you optimize this by defining a union.
+
+        Union
+                Looks like a struct expect that all of its fields
+                overlap in memory
+
+                Since the fields all reuse the same bits, you have
+                to careful that you don't store the data using one
+                field and access it with another. This will change
+                how the underlying bytes are interpreted
+
+        Replace Value typedef with Value struct with tagged union
+
+18.2: Lox Values and C Values
+        Now that we replaced the typedef of Value(double) to
+        an actual struct, we have to go through the code and
+        expliclity do the conversion on a union
+
+        Add BOOL_VAL, NIL_VAL, and NUMBER_VAL macros to value.h
+                Create Value struct with the correct tag and set union
+                value that correlates to it
+
+        ADD AS_BOOL and AS_NUMBER macros
+                Grabs the values per type from the Value struct union
+
+                AS_NIL doesn't exist because there is only one value for it
+
+        ADD IS_BOOL, IS_NIL, and IS_NUMBER macros
+                Checks the ValueType to see what value the Value struct
+                represents
+
+                AS_ macros should be guarded behind these macros
+
+        These macros will transfer Lox's dynamic values into C's static
+        values
+
+18.3: Dynamically Typed Numbers
+        Add NUMBER_VAL and AS_NUMBER calls to compiler.c and value.c
+
+        18.3.1: Unary Negation and Runtime Errors
+                Add Number error checking and conversion to
+                unary negate in run function in vm.c
+
+                Add peek function to vm.c
+                        Peeks off of VM stack
+
+                        Distance is what postion of the
+                        stack starting at the top
+
+                Add runtimeError function to vm.c
+
+        18.3.2: Binary Arithmetic Operators
+                Alter BINARY_OP macro to do value conversion
+                / error checking with new macros in vm.c
+
+18.4: Two New Types
+        Add OP_NIL, OP_TRUE, and OP_FALSE to
+        enum OpCode in chunk.h
+
+        Alter TOKEN_FALSE, TOKEN_TRUE, and TOKEN_NIL entries in Pratt
+        Parser table to use literal function
+
+        Add literal function to compiler.c
+
+        Adds OP_NIL, OP_TRUE, and OP_FALSE cases in switch
+        in run function in vm.c
+
+        Adds OP_NIL, OP_TRUE, and OP_FALSE cases in switch
+        in disassembleInstruction function in debug.c
+
+        Adds OP_NIL, OP_TRUE, and OP_FALSE cases in switch
+        in printValue function in value.c
+
+        18.4.1: Logical Not and Falsiness
+                Add OP_NOT to enum OpCode in chunk.h
+
+                Add unary function in Pratt Parser table
+                for TOKEN_BANG in compiler.c
+
+                Add TOKEN_BANG case statement to unary function
+                in compiler.c
+
+                Add OP_NEGATE case statement to run function in
+                vm.c
+
+                Add isFalsey function in vm.c
+                        Checks if a value is falsey
+                                nil is false
+
+                                bool true and numbers are truthy
+
+                                bool false is false
+
+                Add OP_NOT case statement in disassembleInstruction function
+                in debug.c
+
+        18.4.2: Equality and Comparison Operators
+                Add OP_EQUAL, OP_GREATER, and OP_LESS to OpCode enum
+                in chunk.h
+
+                Why not !=, <=, and >= operators?
+                        To internalize that bytecode instructions don't need
+                        to closely follow the user's source code. The VM can
+                        do whatever it wants as long as it leads to the suspected
+                        user behavior
+
+                        Can implement them with a combination of other OP codes
+                                a != b is the same as !(a == b)
+
+                        However, if we do decide to use seperate OP codes it will
+                        be faster
+
+                Add precedence and binary function to TOKEN_BANG_EQUAL, TOKEN_EQUAL_EQUAL,
+                TOKEN_GREATER, TOKEN_GREATER_EQUAL, TOKEN_LESS, and TOKEN_LESS_EQUAL
+                in pratt parser table entry in compiler.c
+
+                Add case statements for TOKEN_BANG_EQUAL, TOKEN_EQUAL_EQUAL,
+                TOKEN_GREATER, TOKEN_GREATER_EQUAL, TOKEN_LESS, and TOKEN_LESS_EQUAL
+                to binary function in compiler.c
+
+                Add OP_EQUAL case statement to run function in vm.c
+
+                Add valuesEqual function in values.h and values.c
+                        Why not use memcmp to compare values?
+                        Because of padding and different-sized union fields,
+                        a Value contains unused bits. C gives no guarantee about
+                        what is in those, so it's possible that two equal Values
+                        actually differ in memory that isn't used
+
+                Add OP_GREATER AND OP_LESS case statements to run function
+                in vm.c
+
+                Add OP_EQUAL, OP_GREATER, and OP_LESS case statements to
+                disassembleInstruction function in debug.c
